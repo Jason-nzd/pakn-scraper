@@ -8,7 +8,25 @@ namespace PakScraper
         static int secondsDelayBetweenPageScrapes = 22;
         static string[] urls = new string[] {
             "https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery?pg=1",
-            "https://www.paknsave.co.nz/shop/category/chilled-frozen-and-desserts?pg=1"
+            "https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/fruit--vegetables/fresh-fruit?pg=1",
+            "https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/fruit--vegetables/fresh-vegetables?pg=1",
+            "https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/fruit--vegetables/prepacked-fresh-fruit?pg=1",
+            "https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/fruit--vegetables/prepacked-fresh-vegetables?pg=1",
+            "https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/dairy--eggs/eggs?pg=1",
+            "https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/dairy--eggs/fresh-milk?pg=1",
+            "https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/dairy--eggs/long-life-milk--milk-powder?pg=1",
+            "https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/dairy--eggs/dairy--lactose-free?pg=1",
+            "https://www.paknsave.co.nz/shop/category/chilled-frozen-and-desserts?pg=1",
+            "https://www.paknsave.co.nz/shop/category/chilled-frozen-and-desserts/cheese/cheese-blocks?pg=1",
+            "https://www.paknsave.co.nz/shop/category/chilled-frozen-and-desserts/desserts/ice-cream--frozen-yoghurt?pg=1",
+            "https://www.paknsave.co.nz/shop/category/chilled-frozen-and-desserts/frozen-foods/frozen-fries--potatoes?pg=1",
+            "https://www.paknsave.co.nz/shop/category/chilled-frozen-and-desserts/frozen-foods/frozen-beef-lamb--pork?pg=1",
+            "https://www.paknsave.co.nz/shop/category/chilled-frozen-and-desserts/frozen-foods/frozen-chicken--poultry?pg=1",
+            "https://www.paknsave.co.nz/shop/category/chilled-frozen-and-desserts/frozen-foods/frozen-pizza--bases?pg=1",
+            "https://www.paknsave.co.nz/shop/category/pantry/confectionery?pg=1",
+            "https://www.paknsave.co.nz/shop/category/pantry/confectionery/chocolate-blocks?pg=1",
+            "https://www.paknsave.co.nz/shop/category/pets/pet-supplies/cat-food?pg=1",
+            "https://www.paknsave.co.nz/shop/category/pets/pet-supplies/cat-treats?pg=1",
         };
 
         public record Product(
@@ -34,6 +52,10 @@ namespace PakScraper
 
         public static async Task Main(string[] args)
         {
+            await S3.Upload();
+            Console.WriteLine("s3 complete");
+            return;
+
             // Handle arguments - 'dotnet run dry' will run in dry mode, bypassing CosmosDB
             if (args.Length > 0)
             {
@@ -79,7 +101,7 @@ namespace PakScraper
 
                 // Query all product card entries
                 var productElements = await playwrightPage.QuerySelectorAllAsync("div.fs-product-card");
-                log(ConsoleColor.Yellow, productElements.Count.ToString().PadLeft(12) + " products found");
+                log(ConsoleColor.Yellow, productElements.Count.ToString().PadLeft(9) + " products found");
 
                 // Create counters for logging purposes
                 int newProductsCount = 0, updatedProductsCount = 0, upToDateProductsCount = 0;
@@ -222,7 +244,7 @@ namespace PakScraper
             int categoriesStartIndex = url.IndexOf("/category/");
             int categoriesEndIndex = url.Contains("?") ? url.IndexOf("?") : url.Length;
             string categoriesString = url.Substring(categoriesStartIndex, categoriesEndIndex - categoriesStartIndex);
-            string[] splitCategories = categoriesString.Split("/").Skip(1).ToArray();
+            string[] splitCategories = categoriesString.Split("/").Skip(2).ToArray();
 
             return splitCategories;
         }

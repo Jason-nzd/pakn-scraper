@@ -111,7 +111,7 @@ namespace PakScraper
 
                     // Log price change with different verb and colour depending on price change direction
                     bool priceTrendingDown = (scrapedPrice < dbPrice);
-                    string priceTrendText = "Price " + (priceTrendingDown ? "Decreased" : "Increased").PadLeft(15);
+                    string priceTrendText = "Price " + (priceTrendingDown ? "Decreased" : "Increased") + ":";
 
                     log(priceTrendingDown ? ConsoleColor.Green : ConsoleColor.Red,
                         $"{priceTrendText} {dbProduct.name.PadRight(40).Substring(0, 40)} from " +
