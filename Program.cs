@@ -5,8 +5,8 @@ namespace PakScraper
 {
     public class Program
     {
-        static int secondsDelayBetweenPageScrapes = 22;
-        static string[] urls = new string[] {
+        private static int secondsDelayBetweenPageScrapes = 32;
+        private static string[] urls = new string[] {
             "https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery?pg=1",
             "https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/fruit--vegetables/fresh-fruit?pg=1",
             "https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/fruit--vegetables/fresh-vegetables?pg=1",
@@ -52,15 +52,11 @@ namespace PakScraper
 
         public static async Task Main(string[] args)
         {
-            await S3.Upload();
-            Console.WriteLine("s3 complete");
-            return;
-
             // Handle arguments - 'dotnet run dry' will run in dry mode, bypassing CosmosDB
             if (args.Length > 0)
             {
                 if (args[0] == "dry") dryRunMode = true;
-                log(ConsoleColor.Yellow, $"\n(Dry Run mode on)");
+                Log(ConsoleColor.Yellow, $"\n(Dry Run mode on)");
             }
 
             // Launch Playwright Browser
@@ -69,16 +65,22 @@ namespace PakScraper
                 new BrowserTypeLaunchOptions { Headless = false }
             );
             playwrightPage = await browser.NewPageAsync();
-            await routePlaywrightExclusions(logToConsole: false);
+            await RoutePlaywrightExclusions(logToConsole: false);
 
             // Connect to CosmosDB - end program if unable to connect
             if (!dryRunMode)
             {
-                if (!await CosmosDB.establishConnection(
+                if (!await CosmosDB.EstablishConnection(
                        databaseName: "supermarket-prices",
                        partitionKey: "/name",
                        containerName: "supermarket-products"
                    )) return;
+            }
+
+            // Connect to AWS S3
+            if (!dryRunMode)
+            {
+                S3.EstablishConnection(bucketName: "paknsaveimages");
             }
 
             // Open up each URL and run the scraping function
@@ -87,21 +89,21 @@ namespace PakScraper
                 // Try load page and wait for full content to dynamically load in
                 try
                 {
-                    log(ConsoleColor.Yellow,
+                    Log(ConsoleColor.Yellow,
                         $"\nLoading Page [{i + 1}/{urls.Count()}] {urls[i].PadRight(112).Substring(12, 100)}");
                     await playwrightPage!.GotoAsync(urls[i]);
                     await playwrightPage.WaitForSelectorAsync("span.fs-price-lockup__cents");
                 }
                 catch (System.Exception e)
                 {
-                    log(ConsoleColor.Red, "Unable to Load Web Page");
+                    Log(ConsoleColor.Red, "Unable to Load Web Page");
                     Console.Write(e.ToString());
                     return;
                 }
 
                 // Query all product card entries
                 var productElements = await playwrightPage.QuerySelectorAllAsync("div.fs-product-card");
-                log(ConsoleColor.Yellow, productElements.Count.ToString().PadLeft(9) + " products found");
+                Log(ConsoleColor.Yellow, productElements.Count.ToString().PadLeft(5) + " products found");
 
                 // Create counters for logging purposes
                 int newProductsCount = 0, updatedProductsCount = 0, upToDateProductsCount = 0;
@@ -110,12 +112,15 @@ namespace PakScraper
                 foreach (var element in productElements)
                 {
                     // Create Product object from playwright element
-                    Product scrapedProduct = await scrapeProductElementToRecord(element, urls[i]);
+                    Product scrapedProduct = await ScrapeProductElementToRecord(element, urls[i]);
 
                     if (!dryRunMode)
                     {
                         // Try upsert to CosmosDB
-                        UpsertResponse response = await CosmosDB.upsertProduct(scrapedProduct);
+                        UpsertResponse response = await CosmosDB.UpsertProduct(scrapedProduct);
+
+                        // Try upload image to AWS S3
+                        //await S3.UploadImageToS3(scrapedProduct.imgUrl);
 
                         // Increment stats counters based on response from CosmosDB
                         switch (response)
@@ -142,7 +147,8 @@ namespace PakScraper
                         // In Dry Run mode, print a log row for every product
                         Console.WriteLine(
                             scrapedProduct.id.PadLeft(9) + " | " + scrapedProduct.name!.PadRight(40).Substring(0, 40) +
-                            " | " + scrapedProduct.size.PadRight(12) + " | $" + scrapedProduct.currentPrice + "\t| " +
+                            " | " + scrapedProduct.size.PadRight(8) + " | $" +
+                            scrapedProduct.currentPrice.ToString().PadLeft(5) + " | " +
                             scrapedProduct.category.Last().PadRight(10)
                         );
                     }
@@ -151,29 +157,30 @@ namespace PakScraper
                 // Log consolidated CosmosDB stats for entire page scrape
                 if (!dryRunMode)
                 {
-                    log(ConsoleColor.Blue, $"{"CosmosDB:".PadLeft(15)} {newProductsCount} new products, " +
+                    Log(ConsoleColor.Blue, $"{"CosmosDB:".PadLeft(12)} {newProductsCount} new products, " +
                     $"{updatedProductsCount} updated, {upToDateProductsCount} already up-to-date");
                 }
 
                 // This page has now completed scraping. A delay is added in-between each subsequent URL
                 if (i != urls.Count() - 1)
                 {
-                    log(ConsoleColor.Gray,
-                        $"{"Waiting".PadLeft(13)} {secondsDelayBetweenPageScrapes}s until next page scrape.."
+                    Log(ConsoleColor.Gray,
+                        $"{"Waiting".PadLeft(10)} {secondsDelayBetweenPageScrapes}s until next page scrape.."
                     );
                     Thread.Sleep(secondsDelayBetweenPageScrapes * 1000);
                 }
             }
 
             // Clean up playwright browser and end program
-            log(ConsoleColor.Blue, "\nScraping Completed \n");
+            Log(ConsoleColor.Blue, "\nScraping Completed \n");
             await browser.CloseAsync();
+            if (!dryRunMode) S3.Dispose();
             return;
         }
 
         // Takes a playwright element "div.fs-product-card", scrapes each of the desired data fields,
         //  and then returns a completed Product record
-        async static Task<Product> scrapeProductElementToRecord(IElementHandle element, string sourceUrl)
+        private async static Task<Product> ScrapeProductElementToRecord(IElementHandle element, string sourceUrl)
         {
             // Name
             var aTag = await element.QuerySelectorAsync("a");
@@ -196,7 +203,7 @@ namespace PakScraper
             // Mark source website
             string sourceSite = "paknsave.co.nz";
 
-            string[]? categories = deriveCategoriesFromUrl(sourceUrl);
+            string[]? categories = DeriveCategoriesFromUrl(sourceUrl);
 
             // Price scraping is put in try-catch to better handle edge cases
             float currentPrice = 0;
@@ -220,7 +227,7 @@ namespace PakScraper
             }
             catch (Exception e)
             {
-                log(ConsoleColor.Red, $"Price scrape error on {name}");
+                Log(ConsoleColor.Red, $"Price scrape error on {name}");
                 Console.Write(e);
             }
             // Return completed Product record
@@ -228,14 +235,14 @@ namespace PakScraper
         }
 
         // Shorthand function for logging with colour
-        public static void log(ConsoleColor color, string text)
+        public static void Log(ConsoleColor color, string text)
         {
             Console.ForegroundColor = color;
             Console.WriteLine(text);
             Console.ForegroundColor = ConsoleColor.White;
         }
 
-        static string[]? deriveCategoriesFromUrl(string url)
+        private static string[]? DeriveCategoriesFromUrl(string url)
         {
             // www.domain.co.nz/shop/category/chilled-frozen-and-desserts?pg=1"
             // If url doesn't contain /browse/, return no category
@@ -249,7 +256,7 @@ namespace PakScraper
             return splitCategories;
         }
 
-        static async Task routePlaywrightExclusions(bool logToConsole)
+        private static async Task RoutePlaywrightExclusions(bool logToConsole)
         {
             // Define excluded types and urls to reject
             string[] typeExclusions = { "image", "stylesheet", "media", "font", "other" };
@@ -272,12 +279,12 @@ namespace PakScraper
 
                 if (excludeThisRequest)
                 {
-                    if (logToConsole) log(ConsoleColor.Red, $"{req.Method} {req.ResourceType} - {trimmedUrl}");
+                    if (logToConsole) Log(ConsoleColor.Red, $"{req.Method} {req.ResourceType} - {trimmedUrl}");
                     await route.AbortAsync();
                 }
                 else
                 {
-                    if (logToConsole) log(ConsoleColor.White, $"{req.Method} {req.ResourceType} - {trimmedUrl}");
+                    if (logToConsole) Log(ConsoleColor.White, $"{req.Method} {req.ResourceType} - {trimmedUrl}");
                     await route.ContinueAsync();
                 }
             });
@@ -291,6 +298,6 @@ namespace PakScraper
             Failed
         }
 
-        static bool dryRunMode = false;
+        private static bool dryRunMode = false;
     }
 }

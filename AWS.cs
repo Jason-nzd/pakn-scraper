@@ -2,44 +2,45 @@ using System.Net;
 using Amazon;
 using Amazon.S3;
 using Amazon.S3.Model;
+using static PakScraper.Program;
 
 namespace PakScraper
 {
-    public class S3
+    public partial class S3
     {
-        private const string bucketName = "paknsaveimages";
-        // For simplicity the example creates two objects from the same file.
-        // You specify key names for these objects.
-        private const string keyName1 = "file1";
-        private static readonly RegionEndpoint region = RegionEndpoint.APSoutheast2;
+        private static string? bucket;
+        private static RegionEndpoint region = RegionEndpoint.APSoutheast2;
         private static IAmazonS3? s3client;
-        public static async Task Upload()
+        private static HttpClient? httpclient;
+        public static void EstablishConnection(string bucketName)
         {
+            bucket = bucketName;
             s3client = new AmazonS3Client(region);
-            string url = "https://a.fsimg.co.nz/product/retail/fan/image/400x400/5039956.png";
-            await downloadImageToS3(url);
-            await downloadImageToS3("https://a.fsimg.co.nz/product/retail/fan/image/400x400/5046503.png");
+            httpclient = new HttpClient();
         }
 
-        static async Task downloadImageToS3(string url)
+        public static void Dispose()
+        {
+            httpclient!.Dispose();
+            s3client!.Dispose();
+        }
+
+        public static async Task UploadImageToS3(string url)
         {
             string fileName = url.Split("/").Last();
-            Console.WriteLine("File " + fileName);
 
             try
             {
                 if (await imageAlreadyExists(url)) return;
 
-                HttpClient httpclient = new HttpClient();
                 Stream stream = new MemoryStream();
-
-                await stream.WriteAsync(await httpclient.GetByteArrayAsync(url));
+                await stream.WriteAsync(await httpclient!.GetByteArrayAsync(url));
 
                 long byteLength = stream.Length;
 
                 var putRequest = new PutObjectRequest
                 {
-                    BucketName = bucketName,
+                    BucketName = bucket,
                     Key = fileName,
                     InputStream = stream
                 };
@@ -48,7 +49,7 @@ namespace PakScraper
 
                 if (response.HttpStatusCode == HttpStatusCode.OK)
                 {
-                    Console.WriteLine($"New Image Uploaded to S3: {fileName} - byteLength: {byteLength.ToString()}");
+                    Log(ConsoleColor.DarkGray, $"   New Image: {fileName} - Size: {printFileSize(byteLength)} - {url}");
                 }
                 else
                 {
@@ -60,28 +61,25 @@ namespace PakScraper
             }
             catch (AmazonS3Exception e)
             {
-                Console.WriteLine(
-                        "Error encountered ***. Message:'{0}' when writing an object"
-                        , e.Message);
+                Log(ConsoleColor.Red, "S3 Exception: " + e.Message);
             }
             catch (Exception e)
             {
-                Console.WriteLine(
-                    "Unknown encountered on server. Message:'{0}' when writing an object"
-                    , e.Message);
+                Log(ConsoleColor.Red, e.Message);
             }
         }
 
-        static async Task<bool> imageAlreadyExists(string url)
+        // Check if image already exists on S3, returns true if exists, else throws exception and returns false
+        private static async Task<bool> imageAlreadyExists(string url)
         {
             string fileName = url.Split("/").Last();
 
             try
             {
-                var response = await s3client!.GetObjectAsync(bucketName: bucketName, key: fileName);
+                var response = await s3client!.GetObjectAsync(bucketName: bucket, key: fileName);
                 if (response.HttpStatusCode == HttpStatusCode.OK)
                 {
-                    Console.WriteLine($"Image {fileName} already exists");
+                    //Log(ConsoleColor.DarkGray, $"   Image {fileName} already exists - {url}");
                     return true;
                 }
                 else
@@ -93,6 +91,21 @@ namespace PakScraper
             {
                 return false;
             }
+        }
+
+        // Takes a byte length such as 38043260 and returns a nicer string such as 38 MB
+        private static string printFileSize(long byteLength)
+        {
+            if (byteLength < 1) return "0 KB";
+
+            if (byteLength >= 1 && byteLength < 1000) return "1 KB";
+
+            string longString = byteLength.ToString();
+
+            if (byteLength >= 1000 && byteLength < 1000000)
+                return longString.Substring(0, longString.Length - 3) + " KB";
+
+            else return longString.Substring(0, longString.Length - 6) + " MB";
         }
     }
 }

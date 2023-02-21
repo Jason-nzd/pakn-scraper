@@ -6,7 +6,11 @@ namespace PakScraper
 {
     public partial class CosmosDB
     {
-        public static async Task<Boolean> establishConnection(string databaseName, string partitionKey, string containerName)
+        public static async Task<Boolean> EstablishConnection(
+            string databaseName,
+            string partitionKey,
+            string containerName
+        )
         {
             try
             {
@@ -30,29 +34,29 @@ namespace PakScraper
                     throughput: 400
                 );
 
-                log(ConsoleColor.Yellow, $"\n(Connected to CosmosDB) {cosmosClient.Endpoint}");
+                Log(ConsoleColor.Yellow, $"\n(Connected to CosmosDB) {cosmosClient.Endpoint}");
                 return true;
             }
             catch (Microsoft.Azure.Cosmos.CosmosException e)
             {
-                log(ConsoleColor.Red, e.GetType().ToString());
-                log(ConsoleColor.Red,
+                Log(ConsoleColor.Red, e.GetType().ToString());
+                Log(ConsoleColor.Red,
                 "Error Connecting to CosmosDB - check appsettings.json, endpoint or key may be expired");
                 return false;
             }
             catch (HttpRequestException e)
             {
-                log(ConsoleColor.Red, e.GetType().ToString());
-                log(ConsoleColor.Red,
+                Log(ConsoleColor.Red, e.GetType().ToString());
+                Log(ConsoleColor.Red,
                 "Error Connecting to CosmosDB - check firewall and internet status");
                 return false;
             }
             catch (Exception e)
             {
-                log(ConsoleColor.Red, e.GetType().ToString());
-                log(ConsoleColor.Red,
+                Log(ConsoleColor.Red, e.GetType().ToString());
+                Log(ConsoleColor.Red,
                 "Error Connecting to CosmosDB - make sure appsettings.json is created and contains:");
-                log(ConsoleColor.White,
+                Log(ConsoleColor.White,
                     "{\n" +
                     "\t\"COSMOS_ENDPOINT\": \"<your cosmosdb endpoint uri>\",\n" +
                     "\t\"COSMOS_KEY\": \"<your cosmosdb primary key>\"\n" +
@@ -63,7 +67,7 @@ namespace PakScraper
         }
 
         // Takes a scraped Product, and tries to insert or update an existing Product on CosmosDB
-        public async static Task<UpsertResponse> upsertProduct(Product scrapedProduct)
+        public async static Task<UpsertResponse> UpsertProduct(Product scrapedProduct)
         {
             bool productAlreadyOnCosmosDB = false;
             Product? dbProduct = null;
@@ -113,7 +117,7 @@ namespace PakScraper
                     bool priceTrendingDown = (scrapedPrice < dbPrice);
                     string priceTrendText = "Price " + (priceTrendingDown ? "Decreased" : "Increased") + ":";
 
-                    log(priceTrendingDown ? ConsoleColor.Green : ConsoleColor.Red,
+                    Log(priceTrendingDown ? ConsoleColor.Green : ConsoleColor.Red,
                         $"{priceTrendText} {dbProduct.name.PadRight(40).Substring(0, 40)} from " +
                         $"${dbProduct.currentPrice} to ${scrapedProduct.currentPrice}"
                     );
@@ -144,8 +148,8 @@ namespace PakScraper
 
                     Console.WriteLine(
                         $"{"New Product:".PadLeft(15)} {scrapedProduct.id.PadRight(8)} | " +
-                        $"{scrapedProduct.name!.PadRight(40).Substring(0, 40)}" +
-                        $" | ${scrapedProduct.currentPrice}\t\t| {scrapedProduct.category.Last()}"
+                        $"{scrapedProduct.name!.PadRight(40).Substring(0, 40)} | {scrapedProduct.size.PadRight(8)}" +
+                        $" | $ {scrapedProduct.currentPrice.ToString().PadRight(5)} | {scrapedProduct.category.Last()}"
                     );
 
                     return UpsertResponse.NewProduct;
