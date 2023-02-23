@@ -7,7 +7,7 @@ namespace PakScraper
     {
         private static int secondsDelayBetweenPageScrapes = 32;
         private static string[] urls = new string[] {
-            "https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery?pg=1",
+            //"https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery?pg=1",
             "https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/fruit--vegetables/fresh-fruit?pg=1",
             "https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/fruit--vegetables/fresh-vegetables?pg=1",
             "https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/fruit--vegetables/prepacked-fresh-fruit?pg=1",
@@ -16,14 +16,14 @@ namespace PakScraper
             "https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/dairy--eggs/fresh-milk?pg=1",
             "https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/dairy--eggs/long-life-milk--milk-powder?pg=1",
             "https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/dairy--eggs/dairy--lactose-free?pg=1",
-            "https://www.paknsave.co.nz/shop/category/chilled-frozen-and-desserts?pg=1",
+            //"https://www.paknsave.co.nz/shop/category/chilled-frozen-and-desserts?pg=1",
             "https://www.paknsave.co.nz/shop/category/chilled-frozen-and-desserts/cheese/cheese-blocks?pg=1",
             "https://www.paknsave.co.nz/shop/category/chilled-frozen-and-desserts/desserts/ice-cream--frozen-yoghurt?pg=1",
             "https://www.paknsave.co.nz/shop/category/chilled-frozen-and-desserts/frozen-foods/frozen-fries--potatoes?pg=1",
             "https://www.paknsave.co.nz/shop/category/chilled-frozen-and-desserts/frozen-foods/frozen-beef-lamb--pork?pg=1",
             "https://www.paknsave.co.nz/shop/category/chilled-frozen-and-desserts/frozen-foods/frozen-chicken--poultry?pg=1",
             "https://www.paknsave.co.nz/shop/category/chilled-frozen-and-desserts/frozen-foods/frozen-pizza--bases?pg=1",
-            "https://www.paknsave.co.nz/shop/category/pantry/confectionery?pg=1",
+            //"https://www.paknsave.co.nz/shop/category/pantry/confectionery?pg=1",
             "https://www.paknsave.co.nz/shop/category/pantry/confectionery/chocolate-blocks?pg=1",
             "https://www.paknsave.co.nz/shop/category/pets/pet-supplies/cat-food?pg=1",
             "https://www.paknsave.co.nz/shop/category/pets/pet-supplies/cat-treats?pg=1",
@@ -73,7 +73,7 @@ namespace PakScraper
                 if (!await CosmosDB.EstablishConnection(
                        databaseName: "supermarket-prices",
                        partitionKey: "/name",
-                       containerName: "supermarket-products"
+                       containerName: "products"
                    )) return;
             }
 
@@ -148,8 +148,7 @@ namespace PakScraper
                         Console.WriteLine(
                             scrapedProduct.id.PadLeft(9) + " | " + scrapedProduct.name!.PadRight(40).Substring(0, 40) +
                             " | " + scrapedProduct.size.PadRight(8) + " | $" +
-                            scrapedProduct.currentPrice.ToString().PadLeft(5) + " | " +
-                            scrapedProduct.category.Last().PadRight(10)
+                            scrapedProduct.currentPrice.ToString().PadLeft(5) + " | " + scrapedProduct.category
                         );
                     }
                 }
@@ -242,18 +241,19 @@ namespace PakScraper
             Console.ForegroundColor = ConsoleColor.White;
         }
 
+        // Get the product category from the url, can support either 1 or many categories
         private static string[]? DeriveCategoriesFromUrl(string url)
         {
             // www.domain.co.nz/shop/category/chilled-frozen-and-desserts?pg=1"
-            // If url doesn't contain /browse/, return no category
+            //  returns [chilled-frozen-and-desserts]
             if (url.IndexOf("/category/") < 0) return null;
 
             int categoriesStartIndex = url.IndexOf("/category/");
             int categoriesEndIndex = url.Contains("?") ? url.IndexOf("?") : url.Length;
             string categoriesString = url.Substring(categoriesStartIndex, categoriesEndIndex - categoriesStartIndex);
-            string[] splitCategories = categoriesString.Split("/").Skip(2).ToArray();
+            string lastCategory = categoriesString.Split("/").Skip(2).Last();
 
-            return splitCategories;
+            return new string[] { lastCategory };
         }
 
         private static async Task RoutePlaywrightExclusions(bool logToConsole)
