@@ -32,14 +32,12 @@ namespace PakScraper
         public record Product(
             string id,
             string name,
+            string size,
             float currentPrice,
             string[] category,
-            string size,
             string sourceSite,
-            DatedPrice[] priceHistory,
-            string imgUrl
+            DatedPrice[] priceHistory
         );
-
         public record DatedPrice(
             string date,
             float price
@@ -64,7 +62,10 @@ namespace PakScraper
             await using var browser = await playwright.Chromium.LaunchAsync(
                 new BrowserTypeLaunchOptions { Headless = false }
             );
-            playwrightPage = await browser.NewPageAsync();
+            var context = await browser.NewContextAsync();
+
+            // Launch Page
+            playwrightPage = await context.NewPageAsync();
             await RoutePlaywrightExclusions(logToConsole: false);
 
             // Connect to CosmosDB - end program if unable to connect
@@ -82,6 +83,9 @@ namespace PakScraper
             {
                 S3.EstablishConnection(bucketName: "paknsaveimages");
             }
+
+            // Open a page and allow the geolocation detection system to set the desired location
+            await OpenPageAndSetLocation();
 
             // Open up each URL and run the scraping function
             for (int i = 0; i < urls.Count(); i++)
@@ -172,6 +176,8 @@ namespace PakScraper
 
             // Clean up playwright browser and end program
             Log(ConsoleColor.Blue, "\nScraping Completed \n");
+            await playwrightPage.Context.CloseAsync();
+            await playwrightPage.CloseAsync();
             await browser.CloseAsync();
             if (!dryRunMode) S3.Dispose();
             return;
@@ -230,7 +236,21 @@ namespace PakScraper
                 Console.Write(e);
             }
             // Return completed Product record
-            return (new Product(id, name!, currentPrice, categories!, size, sourceSite, priceHistory, imgUrl));
+            return (new Product(id, name!, size, currentPrice, categories!, sourceSite, priceHistory));
+        }
+
+        // Get the name of the store location that is currently active
+        private static async Task<string> getStoreLocationName()
+        {
+            try
+            {
+                var storeLocElement = await playwrightPage!.QuerySelectorAsync("span.fs-selected-store__name");
+                return await storeLocElement!.InnerHTMLAsync();
+            }
+            catch (System.Exception)
+            {
+                return "Unknown";
+            }
         }
 
         // Shorthand function for logging with colour
@@ -254,6 +274,32 @@ namespace PakScraper
             string lastCategory = categoriesString.Split("/").Skip(2).Last();
 
             return new string[] { lastCategory };
+        }
+
+        // Gives permission to webpage to use geolocation to set closest store location
+        private static async Task OpenPageAndSetLocation()
+        {
+            try
+            {
+                // Set Geolocation
+                await playwrightPage!.Context.SetGeolocationAsync(new Geolocation() { Latitude = -41.21f, Longitude = 174.91f });
+                await playwrightPage.Context.GrantPermissionsAsync(new string[] { "geolocation" });
+
+                // Goto any page
+                await playwrightPage.GotoAsync("https://www.paknsave.co.nz/shop/deals");
+
+                // The page will automatically reload upon detection of geolocation
+                Thread.Sleep(3000);
+                await playwrightPage.WaitForSelectorAsync("span.fs-price-lockup__cents");
+
+                Log(ConsoleColor.Yellow, $"Selected Store: {await getStoreLocationName()}");
+                return;
+            }
+            catch (System.Exception e)
+            {
+                Log(ConsoleColor.Red, e.ToString());
+                throw;
+            }
         }
 
         private static async Task RoutePlaywrightExclusions(bool logToConsole)
@@ -299,5 +345,6 @@ namespace PakScraper
         }
 
         private static bool dryRunMode = false;
+
     }
 }

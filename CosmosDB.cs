@@ -92,40 +92,61 @@ namespace PakScraper
 
             if (productAlreadyOnCosmosDB)
             {
-                // Check if price has changed
-                float dbPrice = dbProduct!.currentPrice;
-                float scrapedPrice = scrapedProduct.currentPrice;
+                Product? updatedProduct = null;
 
-                if (dbPrice != scrapedPrice)
+                // Check if price has changed
+                bool priceHasChanged = (dbProduct!.currentPrice != scrapedProduct.currentPrice);
+
+                // Check if category or size has changed
+                string oldCategories = string.Join(" ", dbProduct.category);
+                string newCategories = string.Join(" ", scrapedProduct.category);
+                bool otherDataHasChanged = (dbProduct!.size != scrapedProduct.size || oldCategories != newCategories);
+
+                if (priceHasChanged)
                 {
                     // Price has changed, so we can create an updated Product with the changes
                     DatedPrice[] updatedHistory = dbProduct.priceHistory;
                     updatedHistory.Append(scrapedProduct.priceHistory[0]);
 
-                    Product updatedProduct = new Product(
+                    updatedProduct = new Product(
                         dbProduct.id,
                         dbProduct.name,
+                        scrapedProduct.size,
                         scrapedProduct.currentPrice,
-                        dbProduct.category,
-                        dbProduct.size,
-                        dbProduct.sourceSite,
-                        updatedHistory,
-                        dbProduct.imgUrl
+                        scrapedProduct.category,
+                        scrapedProduct.sourceSite,
+                        updatedHistory
                     );
 
                     // Log price change with different verb and colour depending on price change direction
-                    bool priceTrendingDown = (scrapedPrice < dbPrice);
+                    bool priceTrendingDown = (scrapedProduct.currentPrice < dbProduct!.currentPrice);
                     string priceTrendText = "Price " + (priceTrendingDown ? "Decreased" : "Increased") + ":";
 
                     Log(priceTrendingDown ? ConsoleColor.Green : ConsoleColor.Red,
                         $"{priceTrendText} {dbProduct.name.PadRight(40).Substring(0, 40)} from " +
                         $"${dbProduct.currentPrice} to ${scrapedProduct.currentPrice}"
                     );
+                }
+                else if (otherDataHasChanged)
+                {
+                    // If other data has changed, update fields for later upsert
+                    updatedProduct = new Product(
+                        dbProduct.id,
+                        dbProduct.name,
+                        scrapedProduct.size,
+                        dbProduct.currentPrice,
+                        scrapedProduct.category,
+                        scrapedProduct.sourceSite,
+                        dbProduct.priceHistory
+                    );
+                }
 
+                if (priceHasChanged || otherDataHasChanged)
+                {
                     try
                     {
                         // Upsert the updated product back to CosmosDB
-                        await cosmosContainer!.UpsertItemAsync<Product>(updatedProduct, new PartitionKey(updatedProduct.name));
+                        await cosmosContainer!.UpsertItemAsync<Product>(updatedProduct!, new PartitionKey(updatedProduct!.name));
                         return UpsertResponse.Updated;
                     }
                     catch (Microsoft.Azure.Cosmos.CosmosException e)
@@ -136,6 +157,7 @@ namespace PakScraper
                 }
                 else
                 {
+                    // Else existing DB Product has not changed
                     return UpsertResponse.AlreadyUpToDate;
                 }
             }
@@ -147,9 +169,9 @@ namespace PakScraper
                     await cosmosContainer!.UpsertItemAsync<Product>(scrapedProduct, new PartitionKey(scrapedProduct.name));
 
                     Console.WriteLine(
-                        $"{"New Product:".PadLeft(15)} {scrapedProduct.id.PadRight(8)} | " +
-                        $"{scrapedProduct.name!.PadRight(40).Substring(0, 40)} | {scrapedProduct.size.PadRight(8)}" +
-                        $" | $ {scrapedProduct.currentPrice.ToString().PadRight(5)} | {scrapedProduct.category.Last()}"
+                        $"{"New Product:".PadLeft(16)} {scrapedProduct.id.PadRight(8)} | " +
+                        $"{scrapedProduct.name!.PadRight(40).Substring(0, 40)}" +
+                        $" | $ {scrapedProduct.currentPrice.ToString().PadLeft(5)} | {scrapedProduct.category.Last()}"
                     );
 
                     return UpsertResponse.NewProduct;
