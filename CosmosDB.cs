@@ -100,9 +100,13 @@ namespace PakScraper
                 // Check if category or size has changed
                 string oldCategories = string.Join(" ", dbProduct.category);
                 string newCategories = string.Join(" ", scrapedProduct.category);
-                bool otherDataHasChanged = (dbProduct!.size != scrapedProduct.size || oldCategories != newCategories);
+                bool otherDataHasChanged = (
+                    dbProduct!.size != scrapedProduct.size ||
+                    oldCategories != newCategories
+                );
 
-                if (priceHasChanged)
+                // If price has changed and not on the same day, we can update it
+                if (priceHasChanged && (dbProduct.lastUpdated != scrapedProduct.lastUpdated))
                 {
                     // Price has changed, so we can create an updated Product with the changes
                     DatedPrice[] updatedHistory = dbProduct.priceHistory;
@@ -115,12 +119,15 @@ namespace PakScraper
                         scrapedProduct.currentPrice,
                         scrapedProduct.category,
                         scrapedProduct.sourceSite,
-                        updatedHistory
+                        updatedHistory,
+                        scrapedProduct.lastUpdated
                     );
 
                     // Log price change with different verb and colour depending on price change direction
                     bool priceTrendingDown = (scrapedProduct.currentPrice < dbProduct!.currentPrice);
-                    string priceTrendText = "Price " + (priceTrendingDown ? "Decreased" : "Increased") + ":";
+                    string priceTrendText =
+                        "    Price " +
+                        (priceTrendingDown ? "Down" : "Up  ") + ":";
 
                     Log(priceTrendingDown ? ConsoleColor.Green : ConsoleColor.Red,
                         $"{priceTrendText} {dbProduct.name.PadRight(40).Substring(0, 40)} from " +
@@ -137,7 +144,8 @@ namespace PakScraper
                         dbProduct.currentPrice,
                         scrapedProduct.category,
                         scrapedProduct.sourceSite,
-                        dbProduct.priceHistory
+                        dbProduct.priceHistory,
+                        dbProduct.lastUpdated
                     );
                 }
 
@@ -146,7 +154,10 @@ namespace PakScraper
                     try
                     {
                         // Upsert the updated product back to CosmosDB
-                        await cosmosContainer!.UpsertItemAsync<Product>(updatedProduct!, new PartitionKey(updatedProduct!.name));
+                        await cosmosContainer!.UpsertItemAsync<Product>(
+                            updatedProduct!,
+                            new PartitionKey(updatedProduct!.name)
+                        );
                         return UpsertResponse.Updated;
                     }
                     catch (Microsoft.Azure.Cosmos.CosmosException e)
@@ -170,8 +181,8 @@ namespace PakScraper
 
                     Console.WriteLine(
                         $"{"New Product:".PadLeft(16)} {scrapedProduct.id.PadRight(8)} | " +
-                        $"{scrapedProduct.name!.PadRight(40).Substring(0, 40)}" +
-                        $" | $ {scrapedProduct.currentPrice.ToString().PadLeft(5)} | {scrapedProduct.category.Last()}"
+                        $"{scrapedProduct.name!.PadRight(30).Substring(0, 30)}" +
+                        $" | ${scrapedProduct.currentPrice.ToString().PadLeft(5)} | {scrapedProduct.category.Last()}"
                     );
 
                     return UpsertResponse.NewProduct;

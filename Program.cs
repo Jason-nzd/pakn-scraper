@@ -36,7 +36,8 @@ namespace PakScraper
             float currentPrice,
             string[] category,
             string sourceSite,
-            DatedPrice[] priceHistory
+            DatedPrice[] priceHistory,
+            string lastUpdated
         );
         public record DatedPrice(
             string date,
@@ -107,7 +108,7 @@ namespace PakScraper
 
                 // Query all product card entries
                 var productElements = await playwrightPage.QuerySelectorAllAsync("div.fs-product-card");
-                Log(ConsoleColor.Yellow, productElements.Count.ToString().PadLeft(5) + " products found");
+                Log(ConsoleColor.Yellow, " ".PadRight(3) + productElements.Count + " products found");
 
                 // Create counters for logging purposes
                 int newProductsCount = 0, updatedProductsCount = 0, upToDateProductsCount = 0;
@@ -160,7 +161,7 @@ namespace PakScraper
                 // Log consolidated CosmosDB stats for entire page scrape
                 if (!dryRunMode)
                 {
-                    Log(ConsoleColor.Blue, $"{"CosmosDB:".PadLeft(12)} {newProductsCount} new products, " +
+                    Log(ConsoleColor.Blue, $"{"CosmosDB:".PadLeft(13)} {newProductsCount} new products, " +
                     $"{updatedProductsCount} updated, {upToDateProductsCount} already up-to-date");
                 }
 
@@ -168,7 +169,7 @@ namespace PakScraper
                 if (i != urls.Count() - 1)
                 {
                     Log(ConsoleColor.Gray,
-                        $"{"Waiting".PadLeft(10)} {secondsDelayBetweenPageScrapes}s until next page scrape.."
+                        $"{"Waiting".PadLeft(11)} {secondsDelayBetweenPageScrapes}s until next page scrape.."
                     );
                     Thread.Sleep(secondsDelayBetweenPageScrapes * 1000);
                 }
@@ -208,12 +209,15 @@ namespace PakScraper
             // Mark source website
             string sourceSite = "paknsave.co.nz";
 
+            // Categories is an array of 1 or more categories
             string[]? categories = DeriveCategoriesFromUrl(sourceUrl);
+
+            // Date with format 'Tue Jan 14 2023'
+            string todaysDate = DateTime.Now.ToString("ddd MMM dd yyyy");
 
             // Price scraping is put in try-catch to better handle edge cases
             float currentPrice = 0;
             DatedPrice[] priceHistory = { };
-
             try
             {
                 var dollarSpan = await element.QuerySelectorAsync(".fs-price-lockup__dollars");
@@ -223,8 +227,7 @@ namespace PakScraper
                 string centString = await centSpan!.InnerHTMLAsync();
                 currentPrice = float.Parse(dollarString + "." + centString);
 
-                // DatedPrice with date format 'Tue Jan 14 2023'
-                string todaysDate = DateTime.Now.ToString("ddd MMM dd yyyy");
+
                 DatedPrice todaysDatedPrice = new DatedPrice(todaysDate, currentPrice);
 
                 // Create Price History array with a single element
@@ -236,7 +239,7 @@ namespace PakScraper
                 Console.Write(e);
             }
             // Return completed Product record
-            return (new Product(id, name!, size, currentPrice, categories!, sourceSite, priceHistory));
+            return (new Product(id, name!, size, currentPrice, categories!, sourceSite, priceHistory, todaysDate));
         }
 
         // Get the name of the store location that is currently active
@@ -336,6 +339,7 @@ namespace PakScraper
             });
         }
 
+        private static bool dryRunMode = false;
         public enum UpsertResponse
         {
             NewProduct,
@@ -343,8 +347,5 @@ namespace PakScraper
             AlreadyUpToDate,
             Failed
         }
-
-        private static bool dryRunMode = false;
-
     }
 }
