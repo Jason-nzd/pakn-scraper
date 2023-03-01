@@ -91,78 +91,82 @@ namespace PakScraper
             // Open up each URL and run the scraping function
             for (int i = 0; i < urls.Count(); i++)
             {
-                // Try load page and wait for full content to dynamically load in
                 try
                 {
+                    // Try load page and wait for full content to dynamically load in
                     Log(ConsoleColor.Yellow,
                         $"\nLoading Page [{i + 1}/{urls.Count()}] {urls[i].PadRight(112).Substring(12, 100)}");
                     await playwrightPage!.GotoAsync(urls[i]);
                     await playwrightPage.WaitForSelectorAsync("span.fs-price-lockup__cents");
+
+                    // Query all product card entries
+                    var productElements = await playwrightPage.QuerySelectorAllAsync("div.fs-product-card");
+                    Log(ConsoleColor.Yellow, " ".PadRight(4) + productElements.Count + " products found");
+
+                    // Create per-page counters for logging purposes
+                    int newProductsCount = 0, updatedProductsCount = 0, upToDateProductsCount = 0;
+
+                    // Loop through every found playwright element
+                    foreach (var element in productElements)
+                    {
+                        // Create Product object from playwright element
+                        Product scrapedProduct = await ScrapeProductElementToRecord(element, urls[i]);
+
+                        if (!dryRunMode)
+                        {
+                            // Try upsert to CosmosDB
+                            UpsertResponse response = await CosmosDB.UpsertProduct(scrapedProduct);
+
+                            // Try upload image to AWS S3
+                            //await S3.UploadImageToS3(scrapedProduct.imgUrl);
+
+                            // Increment stats counters based on response from CosmosDB
+                            switch (response)
+                            {
+                                case UpsertResponse.NewProduct:
+                                    newProductsCount++;
+                                    break;
+
+                                case UpsertResponse.Updated:
+                                    updatedProductsCount++;
+                                    break;
+
+                                case UpsertResponse.AlreadyUpToDate:
+                                    upToDateProductsCount++;
+                                    break;
+
+                                case UpsertResponse.Failed:
+                                default:
+                                    break;
+                            }
+                        }
+                        else
+                        {
+                            // In Dry Run mode, print a log row for every product
+                            Console.WriteLine(
+                                scrapedProduct.id.PadLeft(9) + " | " +
+                                scrapedProduct.name!.PadRight(40).Substring(0, 40) + " | " +
+                                scrapedProduct.size.PadRight(8) + " | $" +
+                                scrapedProduct.currentPrice.ToString().PadLeft(5) + " | " +
+                                scrapedProduct.category
+                            );
+                        }
+                    }
+                    // Log consolidated CosmosDB stats for entire page scrape
+                    if (!dryRunMode)
+                    {
+                        Log(ConsoleColor.Blue, $"{"CosmosDB:".PadLeft(13)} {newProductsCount} new products, " +
+                        $"{updatedProductsCount} updated, {upToDateProductsCount} already up-to-date");
+                    }
+                }
+                catch (System.TimeoutException)
+                {
+                    Log(ConsoleColor.Red, "Unable to Load Web Page - timed out after 30 seconds");
                 }
                 catch (System.Exception e)
                 {
-                    Log(ConsoleColor.Red, "Unable to Load Web Page");
                     Console.Write(e.ToString());
                     return;
-                }
-
-                // Query all product card entries
-                var productElements = await playwrightPage.QuerySelectorAllAsync("div.fs-product-card");
-                Log(ConsoleColor.Yellow, " ".PadRight(3) + productElements.Count + " products found");
-
-                // Create counters for logging purposes
-                int newProductsCount = 0, updatedProductsCount = 0, upToDateProductsCount = 0;
-
-                // Loop through every found playwright element
-                foreach (var element in productElements)
-                {
-                    // Create Product object from playwright element
-                    Product scrapedProduct = await ScrapeProductElementToRecord(element, urls[i]);
-
-                    if (!dryRunMode)
-                    {
-                        // Try upsert to CosmosDB
-                        UpsertResponse response = await CosmosDB.UpsertProduct(scrapedProduct);
-
-                        // Try upload image to AWS S3
-                        //await S3.UploadImageToS3(scrapedProduct.imgUrl);
-
-                        // Increment stats counters based on response from CosmosDB
-                        switch (response)
-                        {
-                            case UpsertResponse.NewProduct:
-                                newProductsCount++;
-                                break;
-
-                            case UpsertResponse.Updated:
-                                updatedProductsCount++;
-                                break;
-
-                            case UpsertResponse.AlreadyUpToDate:
-                                upToDateProductsCount++;
-                                break;
-
-                            case UpsertResponse.Failed:
-                            default:
-                                break;
-                        }
-                    }
-                    else
-                    {
-                        // In Dry Run mode, print a log row for every product
-                        Console.WriteLine(
-                            scrapedProduct.id.PadLeft(9) + " | " + scrapedProduct.name!.PadRight(40).Substring(0, 40) +
-                            " | " + scrapedProduct.size.PadRight(8) + " | $" +
-                            scrapedProduct.currentPrice.ToString().PadLeft(5) + " | " + scrapedProduct.category
-                        );
-                    }
-                }
-
-                // Log consolidated CosmosDB stats for entire page scrape
-                if (!dryRunMode)
-                {
-                    Log(ConsoleColor.Blue, $"{"CosmosDB:".PadLeft(13)} {newProductsCount} new products, " +
-                    $"{updatedProductsCount} updated, {upToDateProductsCount} already up-to-date");
                 }
 
                 // This page has now completed scraping. A delay is added in-between each subsequent URL
@@ -292,7 +296,7 @@ namespace PakScraper
                 await playwrightPage.GotoAsync("https://www.paknsave.co.nz/shop/deals");
 
                 // The page will automatically reload upon detection of geolocation
-                Thread.Sleep(3000);
+                Thread.Sleep(5000);
                 await playwrightPage.WaitForSelectorAsync("span.fs-price-lockup__cents");
 
                 Log(ConsoleColor.Yellow, $"Selected Store: {await getStoreLocationName()}");
