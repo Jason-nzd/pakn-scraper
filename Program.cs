@@ -6,28 +6,6 @@ namespace PakScraper
     public class Program
     {
         private static int secondsDelayBetweenPageScrapes = 32;
-        private static string[] urls = new string[] {
-            //"https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery?pg=1",
-            "https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/fruit--vegetables/fresh-fruit?pg=1",
-            "https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/fruit--vegetables/fresh-vegetables?pg=1",
-            "https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/fruit--vegetables/prepacked-fresh-fruit?pg=1",
-            "https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/fruit--vegetables/prepacked-fresh-vegetables?pg=1",
-            "https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/dairy--eggs/eggs?pg=1",
-            "https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/dairy--eggs/fresh-milk?pg=1",
-            "https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/dairy--eggs/long-life-milk--milk-powder?pg=1",
-            "https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/dairy--eggs/dairy--lactose-free?pg=1",
-            //"https://www.paknsave.co.nz/shop/category/chilled-frozen-and-desserts?pg=1",
-            "https://www.paknsave.co.nz/shop/category/chilled-frozen-and-desserts/cheese/cheese-blocks?pg=1",
-            "https://www.paknsave.co.nz/shop/category/chilled-frozen-and-desserts/desserts/ice-cream--frozen-yoghurt?pg=1",
-            "https://www.paknsave.co.nz/shop/category/chilled-frozen-and-desserts/frozen-foods/frozen-fries--potatoes?pg=1",
-            "https://www.paknsave.co.nz/shop/category/chilled-frozen-and-desserts/frozen-foods/frozen-beef-lamb--pork?pg=1",
-            "https://www.paknsave.co.nz/shop/category/chilled-frozen-and-desserts/frozen-foods/frozen-chicken--poultry?pg=1",
-            "https://www.paknsave.co.nz/shop/category/chilled-frozen-and-desserts/frozen-foods/frozen-pizza--bases?pg=1",
-            //"https://www.paknsave.co.nz/shop/category/pantry/confectionery?pg=1",
-            "https://www.paknsave.co.nz/shop/category/pantry/confectionery/chocolate-blocks?pg=1",
-            "https://www.paknsave.co.nz/shop/category/pets/pet-supplies/cat-food?pg=1",
-            "https://www.paknsave.co.nz/shop/category/pets/pet-supplies/cat-treats?pg=1",
-        };
 
         public record Product(
             string id,
@@ -44,6 +22,7 @@ namespace PakScraper
             float price
         );
 
+        // Singletons for CosmosDB and Playwright
         public static CosmosClient? cosmosClient;
         public static Database? database;
         public static Container? cosmosContainer;
@@ -58,35 +37,36 @@ namespace PakScraper
                 Log(ConsoleColor.Yellow, $"\n(Dry Run mode on)");
             }
 
-            // Launch Playwright Browser
+            // Launch Playwright Browser - Headless mode doesn't work with the anti-bot mechanisms,
+            //  so a regular browser window is launched
             var playwright = await Playwright.CreateAsync();
             await using var browser = await playwright.Chromium.LaunchAsync(
                 new BrowserTypeLaunchOptions { Headless = false }
             );
             var context = await browser.NewContextAsync();
 
-            // Launch Page
+            // Launch Page and route exclusions, such as ads, trackers, etc
             playwrightPage = await context.NewPageAsync();
-            await RoutePlaywrightExclusions(logToConsole: false);
+            await RoutePlaywrightExclusions();
 
-            // Connect to CosmosDB - end program if unable to connect
             if (!dryRunMode)
             {
+                // Connect to CosmosDB - end program if unable to connect
                 if (!await CosmosDB.EstablishConnection(
-                       databaseName: "supermarket-prices",
-                       partitionKey: "/name",
-                       containerName: "products"
-                   )) return;
-            }
+                    databaseName: "supermarket-prices",
+                    partitionKey: "/name",
+                    containerName: "products"
+                )) return;
 
-            // Connect to AWS S3
-            if (!dryRunMode)
-            {
-                S3.EstablishConnection(bucketName: "paknsaveimages");
+                // Connect to AWS S3
+                //S3.EstablishConnection(bucketName: "paknsaveimages");
             }
 
             // Open a page and allow the geolocation detection system to set the desired location
             await OpenPageAndSetLocation();
+
+            // Read URLs from file
+            List<string> urls = ReadURLsFromFile("URLs.txt");
 
             // Open up each URL and run the scraping function
             for (int i = 0; i < urls.Count(); i++)
@@ -101,7 +81,7 @@ namespace PakScraper
 
                     // Query all product card entries
                     var productElements = await playwrightPage.QuerySelectorAllAsync("div.fs-product-card");
-                    Log(ConsoleColor.Yellow, " ".PadRight(4) + productElements.Count + " products found");
+                    Log(ConsoleColor.Yellow, productElements.Count + " products found");
 
                     // Create per-page counters for logging purposes
                     int newProductsCount = 0, updatedProductsCount = 0, upToDateProductsCount = 0;
@@ -148,7 +128,7 @@ namespace PakScraper
                                 scrapedProduct.name!.PadRight(40).Substring(0, 40) + " | " +
                                 scrapedProduct.size.PadRight(8) + " | $" +
                                 scrapedProduct.currentPrice.ToString().PadLeft(5) + " | " +
-                                scrapedProduct.category
+                                scrapedProduct.category[0]
                             );
                         }
                     }
@@ -179,12 +159,18 @@ namespace PakScraper
                 }
             }
 
-            // Clean up playwright browser and end program
-            Log(ConsoleColor.Blue, "\nScraping Completed \n");
-            await playwrightPage.Context.CloseAsync();
-            await playwrightPage.CloseAsync();
-            await browser.CloseAsync();
-            if (!dryRunMode) S3.Dispose();
+            // Try clean up playwright browser and other resources, then end program
+            try
+            {
+                Log(ConsoleColor.Blue, "\nScraping Completed \n");
+                await playwrightPage.Context.CloseAsync();
+                await playwrightPage.CloseAsync();
+                await browser.CloseAsync();
+                S3.Dispose();
+            }
+            catch (System.Exception)
+            {
+            }
             return;
         }
 
@@ -286,12 +272,16 @@ namespace PakScraper
         // Gives permission to webpage to use geolocation to set closest store location
         private static async Task OpenPageAndSetLocation()
         {
+            Log(ConsoleColor.Yellow, "Selecting store location using geo-location..");
+
+            // Set Geolocation
+            await playwrightPage!.Context.SetGeolocationAsync(
+                new Geolocation() { Latitude = -41.21f, Longitude = 174.91f }
+            );
+            await playwrightPage.Context.GrantPermissionsAsync(new string[] { "geolocation" });
+
             try
             {
-                // Set Geolocation
-                await playwrightPage!.Context.SetGeolocationAsync(new Geolocation() { Latitude = -41.21f, Longitude = 174.91f });
-                await playwrightPage.Context.GrantPermissionsAsync(new string[] { "geolocation" });
-
                 // Goto any page
                 await playwrightPage.GotoAsync("https://www.paknsave.co.nz/shop/deals");
 
@@ -309,7 +299,8 @@ namespace PakScraper
             }
         }
 
-        private static async Task RoutePlaywrightExclusions(bool logToConsole)
+        // Excludes playwright from downloading unwanted resources such as ads, trackers, images, etc.
+        private static async Task RoutePlaywrightExclusions(bool logToConsole = false)
         {
             // Define excluded types and urls to reject
             string[] typeExclusions = { "image", "stylesheet", "media", "font", "other" };
@@ -341,6 +332,30 @@ namespace PakScraper
                     await route.ContinueAsync();
                 }
             });
+        }
+
+        private static List<string> ReadURLsFromFile(string fileName)
+        {
+            List<string> urls = new List<string>();
+
+            try
+            {
+                string[] lines = System.IO.File.ReadAllLines(@fileName);
+
+                if (lines.Length == 0) throw new Exception("No lines found in URLs.txt");
+
+                foreach (string line in lines)
+                {
+                    if (line.Contains(".co.nz")) urls.Add(line);
+                }
+            }
+            catch (System.Exception e)
+            {
+                Console.Write(e.ToString());
+                throw;
+            }
+
+            return urls;
         }
 
         private static bool dryRunMode = false;

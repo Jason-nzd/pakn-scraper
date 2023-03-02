@@ -181,7 +181,7 @@ namespace PakScraper
 
                     Console.WriteLine(
                         $"{"New Product:".PadLeft(16)} {scrapedProduct.id.PadRight(8)} | " +
-                        $"{scrapedProduct.name!.PadRight(30).Substring(0, 30)}" +
+                        $"{scrapedProduct.name!.PadRight(40).Substring(0, 40)}" +
                         $" | ${scrapedProduct.currentPrice.ToString().PadLeft(5)} | {scrapedProduct.category.Last()}"
                     );
 
