@@ -5,7 +5,7 @@ namespace PakScraper
 {
     public class Program
     {
-        private static int secondsDelayBetweenPageScrapes = 32;
+        private static int secondsDelayBetweenPageScrapes = 22;
 
         public record Product(
             string id,
@@ -216,7 +216,6 @@ namespace PakScraper
                 var centSpan = await element.QuerySelectorAsync(".fs-price-lockup__cents");
                 string centString = await centSpan!.InnerHTMLAsync();
                 currentPrice = float.Parse(dollarString + "." + centString);
-
 
                 DatedPrice todaysDatedPrice = new DatedPrice(todaysDate, currentPrice);
 

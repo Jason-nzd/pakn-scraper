@@ -125,8 +125,8 @@ namespace PakScraper
             if (priceHasChanged && (dbProduct.lastUpdated != scrapedProduct.lastUpdated))
             {
                 // Price has changed, so we can create an updated Product with the changes
-                DatedPrice[] updatedHistory = dbProduct.priceHistory;
-                updatedHistory.Append(scrapedProduct.priceHistory[0]);
+                List<DatedPrice> updatedHistory = dbProduct.priceHistory.ToList<DatedPrice>();
+                updatedHistory.Add(scrapedProduct.priceHistory[0]);
 
                 updatedProduct = new Product(
                     dbProduct.id,
@@ -135,7 +135,7 @@ namespace PakScraper
                     scrapedProduct.currentPrice,
                     scrapedProduct.category,
                     scrapedProduct.sourceSite,
-                    updatedHistory,
+                    updatedHistory.ToArray(),
                     scrapedProduct.lastUpdated
                 );
 
@@ -147,6 +147,9 @@ namespace PakScraper
                     $"{priceTrendText} {dbProduct.name.PadRight(40).Substring(0, 40)} from " +
                     $"${dbProduct.currentPrice} to ${scrapedProduct.currentPrice}"
                 );
+
+                Log(ConsoleColor.Yellow, "Debug: DB price history length = " + dbProduct.priceHistory.Length +
+                    " - updated length = " + updatedProduct.priceHistory.Length);
             }
             else if (otherDataHasChanged)
             {
