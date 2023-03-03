@@ -1,5 +1,10 @@
 ﻿using Microsoft.Playwright;
 using Microsoft.Azure.Cosmos;
+using static PakScraper.CosmosDB;
+
+// Pak Scraper
+// Scrapes product info and pricing from Pak n'Save NZ's website.
+// dryRunMode = true - will skip CosmosDB connections and only log to console
 
 namespace PakScraper
 {
@@ -17,10 +22,7 @@ namespace PakScraper
             DatedPrice[] priceHistory,
             string lastUpdated
         );
-        public record DatedPrice(
-            string date,
-            float price
-        );
+        public record DatedPrice(string date, float price);
 
         // Singletons for CosmosDB and Playwright
         public static CosmosClient? cosmosClient;
@@ -84,7 +86,7 @@ namespace PakScraper
                     Log(ConsoleColor.Yellow, productElements.Count + " products found");
 
                     // Create per-page counters for logging purposes
-                    int newProductsCount = 0, updatedProductsCount = 0, upToDateProductsCount = 0;
+                    int newCount = 0, priceUpdatedCount = 0, nonPriceUpdatedCount = 0, upToDateCount = 0;
 
                     // Loop through every found playwright element
                     foreach (var element in productElements)
@@ -104,17 +106,17 @@ namespace PakScraper
                             switch (response)
                             {
                                 case UpsertResponse.NewProduct:
-                                    newProductsCount++;
+                                    newCount++;
                                     break;
-
-                                case UpsertResponse.Updated:
-                                    updatedProductsCount++;
+                                case UpsertResponse.PriceUpdated:
+                                    priceUpdatedCount++;
                                     break;
-
+                                case UpsertResponse.NonPriceUpdated:
+                                    nonPriceUpdatedCount++;
+                                    break;
                                 case UpsertResponse.AlreadyUpToDate:
-                                    upToDateProductsCount++;
+                                    upToDateCount++;
                                     break;
-
                                 case UpsertResponse.Failed:
                                 default:
                                     break;
@@ -132,11 +134,13 @@ namespace PakScraper
                             );
                         }
                     }
-                    // Log consolidated CosmosDB stats for entire page scrape
+
                     if (!dryRunMode)
                     {
-                        Log(ConsoleColor.Blue, $"{"CosmosDB:".PadLeft(13)} {newProductsCount} new products, " +
-                        $"{updatedProductsCount} updated, {upToDateProductsCount} already up-to-date");
+                        // Log consolidated CosmosDB stats for entire page scrape
+                        Log(ConsoleColor.Blue, $"{"CosmosDB:".PadLeft(15)} {newCount} new products, " +
+                        $"{priceUpdatedCount} prices updated, {nonPriceUpdatedCount} info updated, " +
+                        $"{upToDateCount} already up-to-date");
                     }
                 }
                 catch (System.TimeoutException)
@@ -153,7 +157,7 @@ namespace PakScraper
                 if (i != urls.Count() - 1)
                 {
                     Log(ConsoleColor.Gray,
-                        $"{"Waiting".PadLeft(11)} {secondsDelayBetweenPageScrapes}s until next page scrape.."
+                        $"Waiting {secondsDelayBetweenPageScrapes}s until next page scrape.."
                     );
                     Thread.Sleep(secondsDelayBetweenPageScrapes * 1000);
                 }
@@ -254,7 +258,7 @@ namespace PakScraper
         }
 
         // Get the product category from the url, can support either 1 or many categories
-        private static string[] DeriveCategoriesFromUrl(string url)
+        public static string[] DeriveCategoriesFromUrl(string url)
         {
             // www.domain.co.nz/shop/category/chilled-frozen-and-desserts?pg=1"
             //  returns [chilled-frozen-and-desserts]
@@ -335,6 +339,7 @@ namespace PakScraper
             });
         }
 
+        // Reads urls from a txt file, parses urls, and optimises query options for best results
         private static List<string> ReadURLsFromFile(string fileName)
         {
             List<string> urls = new List<string>();
@@ -360,12 +365,6 @@ namespace PakScraper
         }
 
         private static bool dryRunMode = false;
-        public enum UpsertResponse
-        {
-            NewProduct,
-            Updated,
-            AlreadyUpToDate,
-            Failed
-        }
+
     }
 }

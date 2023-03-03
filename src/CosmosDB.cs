@@ -6,7 +6,15 @@ namespace PakScraper
 {
     public partial class CosmosDB
     {
-        public static async Task<Boolean> EstablishConnection(
+        public enum UpsertResponse
+        {
+            NewProduct,
+            PriceUpdated,
+            NonPriceUpdated,
+            AlreadyUpToDate,
+            Failed
+        }
+        public static async Task<bool> EstablishConnection(
             string databaseName,
             string partitionKey,
             string containerName
@@ -37,7 +45,7 @@ namespace PakScraper
                 Log(ConsoleColor.Yellow, $"\n(Connected to CosmosDB) {cosmosClient.Endpoint}");
                 return true;
             }
-            catch (Microsoft.Azure.Cosmos.CosmosException e)
+            catch (CosmosException e)
             {
                 Log(ConsoleColor.Red, e.GetType().ToString());
                 Log(ConsoleColor.Red,
@@ -66,12 +74,9 @@ namespace PakScraper
             }
         }
 
-        // Takes a scraped Product, and tries to insert or update an existing Product on CosmosDB
+        // Takes a scraped Product, and tries to insert it or update it on CosmosDB
         public async static Task<UpsertResponse> UpsertProduct(Product scrapedProduct)
         {
-            // Init response as failed, will be overridden if any DB checks are successfull
-            UpsertResponse result = UpsertResponse.Failed;
-
             try
             {
                 // Check if product already exists on CosmosDB, throws exception if not found
@@ -80,20 +85,39 @@ namespace PakScraper
                     new PartitionKey(scrapedProduct.name)
                 );
 
-                // Set local product from CosmosDB resource
-                Product dbProduct = response.Resource;
-
-                // Update existing product
                 if (response.StatusCode == System.Net.HttpStatusCode.OK)
                 {
-                    result = await UpdateExistingProduct(dbProduct, scrapedProduct);
+                    // Set local product from CosmosDB resource
+                    Product dbProduct = response.Resource;
+
+                    // Try build an updated product
+                    var updatedProduct = BuildUpdatedProduct(dbProduct, scrapedProduct);
+
+                    // If updatedProduct is null, it does not need updating
+                    if (updatedProduct == null) return UpsertResponse.AlreadyUpToDate;
+
+                    else
+                    {
+                        // Upsert the updated product back to CosmosDB
+                        await cosmosContainer!.UpsertItemAsync(
+                            updatedProduct!,
+                            new PartitionKey(updatedProduct!.name)
+                        );
+
+                        // Return UpsertResponse based on price chance or info-only change
+                        if (updatedProduct.currentPrice != dbProduct.currentPrice)
+                        {
+                            return UpsertResponse.PriceUpdated;
+                        }
+                        else return UpsertResponse.NonPriceUpdated;
+                    }
                 }
             }
             // Catch not found exception and prepare to upload a new Product
-            catch (Microsoft.Azure.Cosmos.CosmosException e)
+            catch (CosmosException e)
             {
                 if (e.StatusCode == System.Net.HttpStatusCode.NotFound)
-                    result = await InsertNewProduct(scrapedProduct);
+                    return (await InsertNewProduct(scrapedProduct));
             }
             catch (Exception e)
             {
@@ -101,34 +125,42 @@ namespace PakScraper
                 return UpsertResponse.Failed;
             }
 
-            // Return UpsertResponse
-            return result;
+            // Return failed if this part is ever reached
+            return UpsertResponse.Failed;
         }
 
-        // Updates an existing product on the DB
-        private static async Task<UpsertResponse> UpdateExistingProduct(Product dbProduct, Product scrapedProduct)
+        // Builds a new product with new data from scrapedProduct, and price history data from dbProduct
+        public static Product? BuildUpdatedProduct(Product dbProduct, Product scrapedProduct)
         {
-            Product? updatedProduct = null;
-
             // Check if price has changed
-            bool priceHasChanged = (dbProduct!.currentPrice != scrapedProduct.currentPrice);
+            bool priceHasChanged = dbProduct!.currentPrice != scrapedProduct.currentPrice;
 
             // Check if category or size has changed
             string oldCategories = string.Join(" ", dbProduct.category);
             string newCategories = string.Join(" ", scrapedProduct.category);
-            bool otherDataHasChanged = (
+            bool otherDataHasChanged =
                 dbProduct!.size != scrapedProduct.size ||
                 oldCategories != newCategories
-            );
+            ;
 
             // If price has changed and not on the same day, we can update it
-            if (priceHasChanged && (dbProduct.lastUpdated != scrapedProduct.lastUpdated))
+            if (priceHasChanged && dbProduct.lastUpdated != scrapedProduct.lastUpdated)
             {
                 // Price has changed, so we can create an updated Product with the changes
                 List<DatedPrice> updatedHistory = dbProduct.priceHistory.ToList<DatedPrice>();
                 updatedHistory.Add(scrapedProduct.priceHistory[0]);
 
-                updatedProduct = new Product(
+                // Log price change with different verb and colour depending on price change direction
+                bool priceTrendingDown = scrapedProduct.currentPrice < dbProduct!.currentPrice;
+                string priceTrendText = "Price " + (priceTrendingDown ? "Decreased" : "Increased") + ":";
+
+                Log(priceTrendingDown ? ConsoleColor.Green : ConsoleColor.Red,
+                    $"{priceTrendText} {dbProduct.name.PadRight(40).Substring(0, 40)} from " +
+                    $"${dbProduct.currentPrice} to ${scrapedProduct.currentPrice}"
+                );
+
+                // Return new product with updated data
+                return new Product(
                     dbProduct.id,
                     dbProduct.name,
                     scrapedProduct.size,
@@ -138,23 +170,11 @@ namespace PakScraper
                     updatedHistory.ToArray(),
                     scrapedProduct.lastUpdated
                 );
-
-                // Log price change with different verb and colour depending on price change direction
-                bool priceTrendingDown = (scrapedProduct.currentPrice < dbProduct!.currentPrice);
-                string priceTrendText = "Price " + (priceTrendingDown ? "Decreased" : "Increased") + ":";
-
-                Log(priceTrendingDown ? ConsoleColor.Green : ConsoleColor.Red,
-                    $"{priceTrendText} {dbProduct.name.PadRight(40).Substring(0, 40)} from " +
-                    $"${dbProduct.currentPrice} to ${scrapedProduct.currentPrice}"
-                );
-
-                Log(ConsoleColor.Yellow, "Debug: DB price history length = " + dbProduct.priceHistory.Length +
-                    " - updated length = " + updatedProduct.priceHistory.Length);
             }
             else if (otherDataHasChanged)
             {
-                // If other data has changed, update fields for later upsert
-                updatedProduct = new Product(
+                // If only non-price data has changed, update size, category, sourceSite, fields
+                return new Product(
                     dbProduct.id,
                     dbProduct.name,
                     scrapedProduct.size,
@@ -165,28 +185,10 @@ namespace PakScraper
                     dbProduct.lastUpdated
                 );
             }
-
-            if (priceHasChanged || otherDataHasChanged)
-            {
-                try
-                {
-                    // Upsert the updated product back to CosmosDB
-                    await cosmosContainer!.UpsertItemAsync<Product>(
-                        updatedProduct!,
-                        new PartitionKey(updatedProduct!.name)
-                    );
-                    return UpsertResponse.Updated;
-                }
-                catch (Microsoft.Azure.Cosmos.CosmosException e)
-                {
-                    Console.WriteLine($"CosmosDB Upsert Error on existing Product: {e.StatusCode}");
-                    return UpsertResponse.Failed;
-                }
-            }
             else
             {
                 // Else existing DB Product has not changed
-                return UpsertResponse.AlreadyUpToDate;
+                return null;
             }
         }
 
@@ -196,7 +198,7 @@ namespace PakScraper
             try
             {
                 // No existing product was found, upload to CosmosDB
-                await cosmosContainer!.UpsertItemAsync<Product>(scrapedProduct, new PartitionKey(scrapedProduct.name));
+                await cosmosContainer!.UpsertItemAsync(scrapedProduct, new PartitionKey(scrapedProduct.name));
 
                 Console.WriteLine(
                     $"{"New Product:".PadLeft(15)} {scrapedProduct.id.PadRight(8)} | " +
@@ -206,10 +208,26 @@ namespace PakScraper
 
                 return UpsertResponse.NewProduct;
             }
-            catch (Microsoft.Azure.Cosmos.CosmosException e)
+            catch (CosmosException e)
             {
                 Console.WriteLine($"{"CosmosDB:".PadLeft(15)} Upsert Error for new Product: {e.StatusCode}");
                 return UpsertResponse.Failed;
+            }
+        }
+
+        public static async Task CustomQuery()
+        {
+            var feedIterator = cosmosContainer!.GetItemQueryIterator<Product>(
+                "select * from products p where contains(p.id, 'M')"
+            );
+
+            while (feedIterator.HasMoreResults)
+            {
+                foreach (var item in await feedIterator.ReadNextAsync())
+                {
+                    Console.WriteLine($"Deleting {item.id} - {item.name}");
+                    await cosmosContainer.DeleteItemAsync<Product>(item.id, new PartitionKey(item.name));
+                }
             }
         }
     }
