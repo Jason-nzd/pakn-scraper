@@ -255,18 +255,20 @@ namespace PakScraper
         }
 
         // Get the product category from the url, can support either 1 or many categories
-        private static string[]? DeriveCategoriesFromUrl(string url)
+        private static string[] DeriveCategoriesFromUrl(string url)
         {
             // www.domain.co.nz/shop/category/chilled-frozen-and-desserts?pg=1"
             //  returns [chilled-frozen-and-desserts]
-            if (url.IndexOf("/category/") < 0) return null;
+            if (url.IndexOf("/category/") > 0)
+            {
+                int categoriesStartIndex = url.IndexOf("/category/");
+                int categoriesEndIndex = url.Contains("?") ? url.IndexOf("?") : url.Length;
+                string categoriesString = url.Substring(categoriesStartIndex, categoriesEndIndex - categoriesStartIndex);
+                string lastCategory = categoriesString.Split("/").Skip(2).Last();
 
-            int categoriesStartIndex = url.IndexOf("/category/");
-            int categoriesEndIndex = url.Contains("?") ? url.IndexOf("?") : url.Length;
-            string categoriesString = url.Substring(categoriesStartIndex, categoriesEndIndex - categoriesStartIndex);
-            string lastCategory = categoriesString.Split("/").Skip(2).Last();
-
-            return new string[] { lastCategory };
+                return new string[] { lastCategory };
+            }
+            else return new string[] { "Uncategorised" };
         }
 
         // Gives permission to webpage to use geolocation to set closest store location
