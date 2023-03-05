@@ -35,24 +35,24 @@ namespace PakScraperTests
         [TestMethod]
         public void DeriveCategoriesFromUrl_ExcludesQueryParameters()
         {
-            string hasQueryParameters = "https://www.thewarehouse.co.nz/c/food-pets-household/food-drink/pantry/canned-food?asdfr=gfd";
+            string hasQueryParameters = "https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/dairy--eggs/fresh-milk?pg=1&asdf=123f";
             var result = DeriveCategoriesFromUrl(hasQueryParameters);
-            Assert.IsTrue(result.SequenceEqual(new string[] { "canned-food" }));
+            Assert.IsTrue(result.SequenceEqual(new string[] { "fresh-milk" }));
         }
 
         [TestMethod]
         public void DeriveCategoriesFromUrl_GetsCorrectCategories()
         {
             string normalUrl =
-                "https://www.thewarehouse.co.nz/c/food-pets-household/food-drink/pantry/ingredients-sauces-oils/table-sauces";
-            Assert.IsTrue(DeriveCategoriesFromUrl(normalUrl)[0] == "table-sauces");
+                "https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/dairy--eggs/fresh-milk?pg=1";
+            Assert.IsTrue(DeriveCategoriesFromUrl(normalUrl)[0] == "fresh-milk");
         }
 
         [TestMethod]
         public void DeriveCategoriesFromUrl_WorksWithoutHttpSlash()
         {
-            string nohttp = "www.thewarehouse.co.nz/c/food-pets-household/food-drink/pantry/canned-food";
-            Assert.IsTrue(DeriveCategoriesFromUrl(nohttp)[0] == "canned-food");
+            string nohttp = "www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/dairy--eggs/fresh-milk?pg=1";
+            Assert.IsTrue(DeriveCategoriesFromUrl(nohttp)[0] == "fresh-milk");
         }
     }
 }

@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.33213.308
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PakScraper", "src\PakScraper.csproj", "{2E959751-D1E1-472D-A76F-F41A6526DFE2}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PakScraperTests", "tests\PakScraperTests.csproj", "{B3A08844-3894-4AA3-89B1-65E9C94BC385}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{2E959751-D1E1-472D-A76F-F41A6526DFE2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2E959751-D1E1-472D-A76F-F41A6526DFE2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2E959751-D1E1-472D-A76F-F41A6526DFE2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2E959751-D1E1-472D-A76F-F41A6526DFE2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B3A08844-3894-4AA3-89B1-65E9C94BC385}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B3A08844-3894-4AA3-89B1-65E9C94BC385}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B3A08844-3894-4AA3-89B1-65E9C94BC385}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B3A08844-3894-4AA3-89B1-65E9C94BC385}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {1E64312F-5281-429B-83F1-B8323CC4B2BA}
+	EndGlobalSection
+EndGlobal
