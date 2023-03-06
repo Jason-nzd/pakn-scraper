@@ -144,7 +144,10 @@ namespace PakScraper
             ;
 
             // If price has changed and not on the same day, we can update it
-            if (priceHasChanged && dbProduct.lastUpdated != scrapedProduct.lastUpdated)
+            if (priceHasChanged &&
+                dbProduct.lastUpdated.ToShortDateString() !=
+                scrapedProduct.lastUpdated.ToShortDateString()
+            )
             {
                 // Price has changed, so we can create an updated Product with the changes
                 List<DatedPrice> updatedHistory = dbProduct.priceHistory.ToList<DatedPrice>();

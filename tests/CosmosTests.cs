@@ -12,7 +12,7 @@ namespace PakScraperTests
         {
             // Create sample product existing in database
             float oldPrice = 3.65f;
-            string oldDate = "4 Jan 2023";
+            DateTime oldDate = DateTime.UtcNow.AddDays(-20);
             DatedPrice oldDatedPrice = new DatedPrice(oldDate, oldPrice);
 
             Product dbProduct = new Product("1234", "milk", "2l", oldPrice, new string[] { "milk" }, "site",
@@ -20,7 +20,7 @@ namespace PakScraperTests
 
             // Create sample product scraped days later, but with the same scraped data
             float newPrice = 3.65f;
-            string newDate = "8 Jan 2023";
+            DateTime newDate = DateTime.UtcNow.AddDays(4);
             DatedPrice newDatedPrice = new DatedPrice(newDate, newPrice);
 
             Product scrapedProduct = new Product("1234", "milk", "2l", newPrice, new string[] { "milk" }, "site",
@@ -35,7 +35,7 @@ namespace PakScraperTests
         {
             // Create sample product existing in database
             float oldPrice = 3.65f;
-            string oldDate = "4 Jan 2023";
+            DateTime oldDate = DateTime.UtcNow.AddDays(-20);
             DatedPrice oldDatedPrice = new DatedPrice(oldDate, oldPrice);
 
             Product dbProduct = new Product("1234", "milk", "2l", oldPrice, new string[] { "milk" }, "site",
@@ -43,7 +43,7 @@ namespace PakScraperTests
 
             // Create sample product scraped days later, with increased price
             float newPrice = 5.20f;
-            string newDate = "8 Jan 2023";
+            DateTime newDate = DateTime.UtcNow.AddDays(4);
             DatedPrice newDatedPrice = new DatedPrice(newDate, newPrice);
 
             Product scrapedProduct = new Product("1234", "milk", "2l", newPrice, new string[] { "milk" }, "site",
@@ -61,7 +61,7 @@ namespace PakScraperTests
         {
             // Create sample product existing in database
             float oldPrice = 3.65f;
-            string oldDate = "4 Jan 2023";
+            DateTime oldDate = DateTime.UtcNow.AddDays(-20);
             DatedPrice oldDatedPrice = new DatedPrice(oldDate, oldPrice);
 
             Product dbProduct = new Product("1234", "milk", "2l", oldPrice, new string[] { "milk" }, "site",
@@ -69,7 +69,7 @@ namespace PakScraperTests
 
             // Create sample product scraped days later, with increased price
             float newPrice = 5.20f;
-            string newDate = "8 Jan 2023";
+            DateTime newDate = DateTime.UtcNow.AddDays(4);
             DatedPrice newDatedPrice = new DatedPrice(newDate, newPrice);
 
             Product scrapedProduct = new Product("1234", "milk", "2l", newPrice, new string[] { "milk" }, "site",
@@ -79,7 +79,7 @@ namespace PakScraperTests
 
             // Assert that currentPrice and lastUpdated were correctly set
             Assert.AreEqual<float>(updatedProduct.currentPrice, newPrice, updatedProduct.currentPrice + " - " + newPrice);
-            Assert.AreEqual<string>(updatedProduct.lastUpdated, newDate);
+            Assert.AreEqual<DateTime>(updatedProduct.lastUpdated, newDate);
         }
 
         [TestMethod]

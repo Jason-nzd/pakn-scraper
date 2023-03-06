@@ -26,7 +26,10 @@ namespace PakScraper
                 httpclient!.Dispose();
                 s3client!.Dispose();
             }
-            catch (Exception ex) { }
+            catch (Exception)
+            {
+                // Ignore exceptions when trying to dispose
+            }
         }
 
         public static async Task UploadImageToS3(string url)

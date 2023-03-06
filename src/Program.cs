@@ -20,9 +20,9 @@ namespace PakScraper
             string[] category,
             string sourceSite,
             DatedPrice[] priceHistory,
-            string lastUpdated
+            DateTime lastUpdated
         );
-        public record DatedPrice(string date, float price);
+        public record DatedPrice(DateTime date, float price);
 
         // Singletons for CosmosDB and Playwright
         public static CosmosClient? cosmosClient;
@@ -228,7 +228,9 @@ namespace PakScraper
             string[]? categories = DeriveCategoriesFromUrl(sourceUrl);
 
             // Date with format 'Tue Jan 14 2023'
-            string todaysDate = DateTime.Now.ToString("ddd MMM dd yyyy");
+            //string todaysDate = DateTime.Now.ToString("ddd MMM dd yyyy");
+
+            DateTime todaysDate = DateTime.UtcNow;
 
             // Price scraping is put in try-catch to better handle edge cases
             float currentPrice = 0;
