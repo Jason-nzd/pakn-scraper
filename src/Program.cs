@@ -28,7 +28,9 @@ namespace PakScraper
         public static CosmosClient? cosmosClient;
         public static Database? database;
         public static Container? cosmosContainer;
+        public static IPlaywright? playwright;
         public static IPage? playwrightPage;
+        public static IBrowser? browser;
 
         public static async Task Main(string[] args)
         {
@@ -39,17 +41,8 @@ namespace PakScraper
                 Log(ConsoleColor.Yellow, $"\n(Dry Run mode on)");
             }
 
-            // Launch Playwright Browser - Headless mode doesn't work with the anti-bot mechanisms,
-            //  so a regular browser window is launched
-            var playwright = await Playwright.CreateAsync();
-            await using var browser = await playwright.Chromium.LaunchAsync(
-                new BrowserTypeLaunchOptions { Headless = false }
-            );
-            var context = await browser.NewContextAsync();
-
-            // Launch Page and route exclusions, such as ads, trackers, etc
-            playwrightPage = await context.NewPageAsync();
-            await RoutePlaywrightExclusions();
+            // Establish playwright page
+            await EstablishPlaywright();
 
             if (!dryRunMode)
             {
@@ -167,15 +160,43 @@ namespace PakScraper
             try
             {
                 Log(ConsoleColor.Blue, "\nScraping Completed \n");
-                await playwrightPage.Context.CloseAsync();
+                await playwrightPage!.Context.CloseAsync();
                 await playwrightPage.CloseAsync();
-                await browser.CloseAsync();
+                await browser!.CloseAsync();
                 S3.Dispose();
             }
             catch (System.Exception)
             {
             }
             return;
+        }
+
+        private async static Task EstablishPlaywright()
+        {
+            try
+            {
+                // Launch Playwright Browser - Headless mode doesn't work with the anti-bot mechanisms,
+                //  so a regular browser window is launched
+                playwright = await Playwright.CreateAsync();
+
+                browser = await playwright.Chromium.LaunchAsync(
+                    new BrowserTypeLaunchOptions { Headless = false }
+                );
+                //var context = await browser.NewContextAsync();
+
+                // Launch Page 
+                //playwrightPage = await context.NewPageAsync();
+                playwrightPage = await browser.NewPageAsync();
+
+                // Route exclusions, such as ads, trackers, etc
+                await RoutePlaywrightExclusions();
+                return;
+            }
+            catch (Microsoft.Playwright.PlaywrightException)
+            {
+                Log(ConsoleColor.Red, "Browser must be manually installed using: \npwsh bin/Debug/net6.0/playwright.ps1 install\n");
+                throw;
+            }
         }
 
         // Takes a playwright element "div.fs-product-card", scrapes each of the desired data fields,
@@ -242,6 +263,11 @@ namespace PakScraper
             {
                 var storeLocElement = await playwrightPage!.QuerySelectorAsync("span.fs-selected-store__name");
                 return await storeLocElement!.InnerHTMLAsync();
+            }
+            catch (Microsoft.Playwright.PlaywrightException)
+            {
+                Log(ConsoleColor.Red, "Error loading playwright browser, check firewall and network settings");
+                throw;
             }
             catch (System.Exception)
             {
