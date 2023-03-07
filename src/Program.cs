@@ -10,7 +10,7 @@ namespace PakScraper
 {
     public class Program
     {
-        private static int secondsDelayBetweenPageScrapes = 22;
+        private static int secondsDelayBetweenPageScrapes = 15;
 
         public record Product(
             string id,
