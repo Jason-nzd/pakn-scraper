@@ -162,10 +162,10 @@ namespace PakScraper
                     $"${dbProduct.currentPrice} to ${scrapedProduct.currentPrice}"
                 );
 
-                // Return new product with updated data
+                 // Return new product with updated data
                 return new Product(
                     dbProduct.id,
-                    dbProduct.name,
+                    scrapedProduct.name,
                     scrapedProduct.size,
                     scrapedProduct.currentPrice,
                     scrapedProduct.category,
@@ -176,10 +176,10 @@ namespace PakScraper
             }
             else if (otherDataHasChanged)
             {
-                // If only non-price data has changed, update size, category, sourceSite, fields
+                // If only non-price data has changed, update non price/date fields
                 return new Product(
                     dbProduct.id,
-                    dbProduct.name,
+                    scrapedProduct.name,
                     scrapedProduct.size,
                     dbProduct.currentPrice,
                     scrapedProduct.category,
