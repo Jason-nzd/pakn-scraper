@@ -1,16 +1,17 @@
 ﻿using Microsoft.Playwright;
-using Microsoft.Azure.Cosmos;
-using static PakScraper.CosmosDB;
+using Microsoft.Extensions.Configuration;
+using static Scraper.CosmosDB;
+using static Scraper.Utilities;
 
 // Pak Scraper
 // Scrapes product info and pricing from Pak n'Save NZ's website.
-// dryRunMode = true - will skip CosmosDB connections and only log to console
 
-namespace PakScraper
+namespace Scraper
 {
     public class Program
     {
         private static int secondsDelayBetweenPageScrapes = 15;
+        static bool uploadImagesToAzureFunc = true;
 
         public record Product(
             string id,
@@ -24,44 +25,65 @@ namespace PakScraper
         );
         public record DatedPrice(DateTime date, float price);
 
-        // Singletons for CosmosDB and Playwright
-        public static CosmosClient? cosmosClient;
-        public static Database? database;
-        public static Container? cosmosContainer;
+        // Singletons for Playwright
         public static IPlaywright? playwright;
         public static IPage? playwrightPage;
         public static IBrowser? browser;
+        public static HttpClient httpclient = new HttpClient();
+
+        // Get config from appsettings.json
+        public static IConfiguration config = new ConfigurationBuilder()
+            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+            .AddEnvironmentVariables()
+            .Build();
 
         public static async Task Main(string[] args)
         {
             // Handle arguments - 'dotnet run dry' will run in dry mode, bypassing CosmosDB
+            //  'dotnet run reverse' will reverse the order that each page is loaded
             if (args.Length > 0)
             {
-                if (args[0] == "dry") dryRunMode = true;
+                if (args.Contains("dry")) dryRunMode = true;
+                if (args.Contains("reverse")) reverseMode = true;
                 Log(ConsoleColor.Yellow, $"\n(Dry Run mode on)");
             }
 
-            // Establish playwright page
+            // Establish Playwright browser
             await EstablishPlaywright();
 
+            // Connect to CosmosDB - end program if unable to connect
             if (!dryRunMode)
             {
-                // Connect to CosmosDB - end program if unable to connect
                 if (!await CosmosDB.EstablishConnection(
-                    databaseName: "supermarket-prices",
-                    partitionKey: "/name",
-                    containerName: "products"
-                )) return;
+                        db: "supermarket-prices",
+                        partitionKey: "/name",
+                        container: "products"
+                    )) return;
 
-                // Connect to AWS S3
-                //S3.EstablishConnection(bucketName: "paknsaveimages");
             }
+
+            // Read lines from text file - end program if unable to read
+            List<string>? lines = ReadLinesFromFile("Urls.txt");
+            if (lines == null) return;
+
+            // Parse and optimise each line into valid urls to be scraped
+            List<string> urls = new List<string>();
+            foreach (string line in lines)
+            {
+                string? validUrl =
+                    ParseAndOptimiseURL(
+                        url: line,
+                        urlShouldContain: "paknsave.co.nz",
+                        replaceQueryParams: "?pg=1"
+                    );
+                if (validUrl != null) urls.Add(validUrl);
+            }
+
+            // Optionally reverse the order of urls
+            if (reverseMode) urls.Reverse();
 
             // Open a page and allow the geolocation detection system to set the desired location
             await OpenPageAndSetLocation();
-
-            // Read URLs from file
-            List<string> urls = ReadURLsFromFile("URLs.txt");
 
             // Open up each URL and run the scraping function
             for (int i = 0; i < urls.Count(); i++)
@@ -71,6 +93,7 @@ namespace PakScraper
                     // Try load page and wait for full content to dynamically load in
                     Log(ConsoleColor.Yellow,
                         $"\nLoading Page [{i + 1}/{urls.Count()}] {urls[i].PadRight(112).Substring(12, 100)}");
+
                     await playwrightPage!.GotoAsync(urls[i]);
                     await playwrightPage.WaitForSelectorAsync("span.fs-price-lockup__cents");
 
@@ -82,18 +105,15 @@ namespace PakScraper
                     int newCount = 0, priceUpdatedCount = 0, nonPriceUpdatedCount = 0, upToDateCount = 0;
 
                     // Loop through every found playwright element
-                    foreach (var element in productElements)
+                    foreach (var productElement in productElements)
                     {
                         // Create Product object from playwright element
-                        Product scrapedProduct = await ScrapeProductElementToRecord(element, urls[i]);
+                        Product? scrapedProduct = await ScrapeProductElementToRecord(productElement, urls[i]);
 
-                        if (!dryRunMode)
+                        if (!dryRunMode && scrapedProduct != null)
                         {
                             // Try upsert to CosmosDB
                             UpsertResponse response = await CosmosDB.UpsertProduct(scrapedProduct);
-
-                            // Try upload image to AWS S3
-                            //await S3.UploadImageToS3(scrapedProduct.imgUrl);
 
                             // Increment stats counters based on response from CosmosDB
                             switch (response)
@@ -114,8 +134,16 @@ namespace PakScraper
                                 default:
                                     break;
                             }
+
+                            if (uploadImagesToAzureFunc)
+                            {
+                                // Use Azure Function to upload product image
+                                string hiResImageUrl = await GetHiresImageUrl(productElement);
+                                if (hiResImageUrl != "" || hiResImageUrl != null)
+                                    await UploadImageUsingRestAPI(hiResImageUrl, scrapedProduct);
+                            }
                         }
-                        else
+                        else if (dryRunMode && scrapedProduct != null)
                         {
                             // In Dry Run mode, print a log row for every product
                             Console.WriteLine(
@@ -131,7 +159,7 @@ namespace PakScraper
                     if (!dryRunMode)
                     {
                         // Log consolidated CosmosDB stats for entire page scrape
-                        Log(ConsoleColor.Blue, $"{"CosmosDB:".PadLeft(15)} {newCount} new products, " +
+                        Log(ConsoleColor.Blue, $"{"\nCosmosDB:"} {newCount} new products, " +
                         $"{priceUpdatedCount} prices updated, {nonPriceUpdatedCount} info updated, " +
                         $"{upToDateCount} already up-to-date");
                     }
@@ -139,6 +167,10 @@ namespace PakScraper
                 catch (System.TimeoutException)
                 {
                     Log(ConsoleColor.Red, "Unable to Load Web Page - timed out after 30 seconds");
+                }
+                catch (PlaywrightException e)
+                {
+                    LogError("Unable to Load Web Page - " + e.Message);
                 }
                 catch (System.Exception e)
                 {
@@ -163,7 +195,6 @@ namespace PakScraper
                 await playwrightPage!.Context.CloseAsync();
                 await playwrightPage.CloseAsync();
                 await browser!.CloseAsync();
-                S3.Dispose();
             }
             catch (System.Exception)
             {
@@ -171,7 +202,7 @@ namespace PakScraper
             return;
         }
 
-        private async static Task EstablishPlaywright()
+        public async static Task EstablishPlaywright()
         {
             try
             {
@@ -182,10 +213,8 @@ namespace PakScraper
                 browser = await playwright.Chromium.LaunchAsync(
                     new BrowserTypeLaunchOptions { Headless = false }
                 );
-                //var context = await browser.NewContextAsync();
 
                 // Launch Page 
-                //playwrightPage = await context.NewPageAsync();
                 playwrightPage = await browser.NewPageAsync();
 
                 // Route exclusions, such as ads, trackers, etc
@@ -194,72 +223,135 @@ namespace PakScraper
             }
             catch (Microsoft.Playwright.PlaywrightException)
             {
-                Log(ConsoleColor.Red, "Browser must be manually installed using: \npwsh bin/Debug/net6.0/playwright.ps1 install\n");
+                Log(
+                    ConsoleColor.Red,
+                    "Browser must be manually installed using: \n" +
+                    "pwsh bin/Debug/net6.0/playwright.ps1 install\n"
+                );
                 throw;
             }
         }
 
+        // Get the hi-res image url from the Playwright element
+        public async static Task<string> GetHiresImageUrl(IElementHandle productElement)
+        {
+            // Image URL
+            var aTag = await productElement.QuerySelectorAsync("a");
+            var imgDiv = await aTag!.QuerySelectorAsync("div div");
+            string? imgUrl = await imgDiv!.GetAttributeAsync("data-src-s");
+
+            // Check if image is a valid product image
+            if (!imgUrl!.Contains("200x200")) return "";
+
+            // Swap url params to get hi-res version
+            return imgUrl = imgUrl!.Replace("200x200", "master"); ;
+        }
+
+        // Image URL - get product image url from page, then upload using an Azure Function
+        public async static Task UploadImageUsingRestAPI(string imgUrl, Product product)
+        {
+            // Get AZURE_FUNC_URL from appsettings.json
+            // Example format:
+            // https://<azurefunc>.azurewebsites.net/api/ImageToS3?code=1234asdf==
+            string? funcUrl = config.GetRequiredSection("AZURE_FUNC_URL").Get<string>();
+
+            // Check funcUrl is valid
+            if (!funcUrl!.Contains("http"))
+                throw new Exception("AZURE_FUNC_URL in appsettings.json invalid. Should be in format:\n\n" +
+                "\"AZURE_FUNC_URL\": \"https://<azurefunc>.azurewebsites.net/api/ImageToS3?code=1234asdf==\"");
+
+            // Perform http get
+            string restUrl = funcUrl + "&filename=" + product.id + "&url=" + imgUrl;
+            var response = await httpclient.GetAsync(restUrl);
+            var responseMsg = await response.Content.ReadAsStringAsync();
+
+            // Log for successful upload of new image
+            if (responseMsg.Contains("Successfully Converted to Transparent WebP"))
+            {
+                Log(
+                    ConsoleColor.Gray,
+                    $"   New Image: {product.id.PadLeft(10)} | {product.name.PadRight(50).Substring(0, 50)}"
+                );
+            }
+            else if (responseMsg.Contains("already exists"))
+            {
+                // Do not log for existing images
+            }
+            else
+            {
+                // Log any other errors that may have occurred
+                Console.Write(responseMsg);
+            }
+            return;
+        }
+
         // Takes a playwright element "div.fs-product-card", scrapes each of the desired data fields,
         //  and then returns a completed Product record
-        private async static Task<Product> ScrapeProductElementToRecord(IElementHandle element, string sourceUrl)
+        private async static Task<Product?> ScrapeProductElementToRecord(IElementHandle productElement, string sourceUrl)
         {
-            // Name
-            var aTag = await element.QuerySelectorAsync("a");
-            string? name = await aTag!.GetAttributeAsync("aria-label");
-
-            // Image URL
-            var imgDiv = await aTag.QuerySelectorAsync("div div");
-            string? imgUrl = await imgDiv!.GetAttributeAsync("data-src-s");
-            imgUrl = imgUrl!.Replace("200x200", "400x400");     // get the higher-res version
-
-            // ID
-            var imageFilename = imgUrl!.Split("/").Last();  // get original ID from image url
-            string id = "P" + imageFilename.Split(".").First();   // prepend P to ID
-
-            // Size
-            var pTag = await aTag.QuerySelectorAsync("p");
-            string size = await pTag!.InnerHTMLAsync();
-            size = size.Replace("l", "L");  // capitalize L for litres
-
-            // Mark source website
-            string sourceSite = "paknsave.co.nz";
-
-            // Categories is an array of 1 or more categories
-            string[]? categories = DeriveCategoriesFromUrl(sourceUrl);
-
-            // Date with format 'Tue Jan 14 2023'
-            //string todaysDate = DateTime.Now.ToString("ddd MMM dd yyyy");
-
-            DateTime todaysDate = DateTime.UtcNow;
-
-            // Price scraping is put in try-catch to better handle edge cases
-            float currentPrice = 0;
-            DatedPrice[] priceHistory = { };
             try
             {
-                var dollarSpan = await element.QuerySelectorAsync(".fs-price-lockup__dollars");
+                // Name
+                var aTag = await productElement.QuerySelectorAsync("a");
+                string? name = await aTag!.GetAttributeAsync("aria-label");
+
+                // Image Url
+                var imgDiv = await aTag!.QuerySelectorAsync("div div");
+                string? imgUrl = await imgDiv!.GetAttributeAsync("data-src-s");
+
+                // ID
+                var imageFilename = imgUrl!.Split("/").Last();        // get original ID from image url
+                string id = "P" + imageFilename.Split(".").First();   // prepend P to ID
+
+                // Size
+                var pTag = await aTag.QuerySelectorAsync("p");
+                string size = await pTag!.InnerHTMLAsync();
+                size = size.Replace("l", "L");  // capitalize L for litres
+
+                // Source website
+                string sourceSite = "paknsave.co.nz";
+
+                // Category
+                string lastCategory = DeriveCategoryFromUrl(sourceUrl, urlMustContain: "/category/");
+                string[] categories = new string[] { lastCategory };
+
+                // Price
+                var dollarSpan = await productElement.QuerySelectorAsync(".fs-price-lockup__dollars");
                 string dollarString = await dollarSpan!.InnerHTMLAsync();
 
-                var centSpan = await element.QuerySelectorAsync(".fs-price-lockup__cents");
+                var centSpan = await productElement.QuerySelectorAsync(".fs-price-lockup__cents");
                 string centString = await centSpan!.InnerHTMLAsync();
-                currentPrice = float.Parse(dollarString + "." + centString);
+                float currentPrice = float.Parse(dollarString + "." + centString);
 
+                // DatedPrice
+                DateTime todaysDate = DateTime.UtcNow.AddHours(12);    // add 12hrs for NZ time
                 DatedPrice todaysDatedPrice = new DatedPrice(todaysDate, currentPrice);
 
                 // Create Price History array with a single element
-                priceHistory = new DatedPrice[] { todaysDatedPrice };
+                DatedPrice[] priceHistory = new DatedPrice[] { todaysDatedPrice };
+
+                // Return completed Product record
+                return (new Product(
+                    id,
+                    name!,
+                    size,
+                    currentPrice,
+                    categories!,
+                    sourceSite,
+                    priceHistory,
+                    todaysDate
+                ));
             }
             catch (Exception e)
             {
-                Log(ConsoleColor.Red, $"Price scrape error on {name}");
-                Console.Write(e);
+                Log(ConsoleColor.Red, $"Price scrape error: " + e.Message);
+                // Return null if any exceptions occurred during scraping
+                return null;
             }
-            // Return completed Product record
-            return (new Product(id, name!, size, currentPrice, categories!, sourceSite, priceHistory, todaysDate));
         }
 
         // Get the name of the store location that is currently active
-        private static async Task<string> getStoreLocationName()
+        private static async Task<string> GetStoreLocationName()
         {
             try
             {
@@ -275,31 +367,6 @@ namespace PakScraper
             {
                 return "Unknown";
             }
-        }
-
-        // Shorthand function for logging with colour
-        public static void Log(ConsoleColor color, string text)
-        {
-            Console.ForegroundColor = color;
-            Console.WriteLine(text);
-            Console.ForegroundColor = ConsoleColor.White;
-        }
-
-        // Get the product category from the url, can support either 1 or many categories
-        public static string[] DeriveCategoriesFromUrl(string url)
-        {
-            // www.domain.co.nz/shop/category/chilled-frozen-and-desserts?pg=1"
-            //  returns [chilled-frozen-and-desserts]
-            if (url.IndexOf("/category/") > 0)
-            {
-                int categoriesStartIndex = url.IndexOf("/category/");
-                int categoriesEndIndex = url.Contains("?") ? url.IndexOf("?") : url.Length;
-                string categoriesString = url.Substring(categoriesStartIndex, categoriesEndIndex - categoriesStartIndex);
-                string lastCategory = categoriesString.Split("/").Skip(2).Last();
-
-                return new string[] { lastCategory };
-            }
-            else return new string[] { "Uncategorised" };
         }
 
         // Gives permission to webpage to use geolocation to set closest store location
@@ -322,7 +389,7 @@ namespace PakScraper
                 Thread.Sleep(5000);
                 await playwrightPage.WaitForSelectorAsync("span.fs-price-lockup__cents");
 
-                Log(ConsoleColor.Yellow, $"Selected Store: {await getStoreLocationName()}");
+                Log(ConsoleColor.Yellow, $"Selected Store: {await GetStoreLocationName()}");
                 return;
             }
             catch (System.Exception e)
@@ -366,33 +433,7 @@ namespace PakScraper
                 }
             });
         }
-
-        // Reads urls from a txt file, parses urls, and optimises query options for best results
-        private static List<string> ReadURLsFromFile(string fileName)
-        {
-            List<string> urls = new List<string>();
-
-            try
-            {
-                string[] lines = System.IO.File.ReadAllLines(@fileName);
-
-                if (lines.Length == 0) throw new Exception("No lines found in URLs.txt");
-
-                foreach (string line in lines)
-                {
-                    if (line.Contains(".co.nz")) urls.Add(line);
-                }
-            }
-            catch (System.Exception e)
-            {
-                Console.Write(e.ToString());
-                throw;
-            }
-
-            return urls;
-        }
-
         private static bool dryRunMode = false;
-
+        private static bool reverseMode = false;
     }
 }

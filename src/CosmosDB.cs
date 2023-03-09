@@ -1,43 +1,31 @@
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Configuration;
-using static PakScraper.Program;
+using static Scraper.Program;
+using static Scraper.Utilities;
 
-namespace PakScraper
+namespace Scraper
 {
     public partial class CosmosDB
     {
-        public enum UpsertResponse
-        {
-            NewProduct,
-            PriceUpdated,
-            NonPriceUpdated,
-            AlreadyUpToDate,
-            Failed
-        }
-        public static async Task<bool> EstablishConnection(
-            string databaseName,
-            string partitionKey,
-            string containerName
-        )
+        // CosmosDB singletons
+        public static CosmosClient? cosmosClient;
+        public static Database? database;
+        public static Container? cosmosContainer;
+
+        public static async Task<bool> EstablishConnection(string db, string partitionKey, string container)
         {
             try
             {
                 // Read from appsettings.json or appsettings.local.json
-                IConfiguration config = new ConfigurationBuilder()
-                    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
-                    .AddEnvironmentVariables()
-                    .Build();
-
                 cosmosClient = new CosmosClient(
-                    accountEndpoint: config.GetRequiredSection("COSMOS_ENDPOINT").Get<string>(),
-                    authKeyOrResourceToken: config.GetRequiredSection("COSMOS_KEY").Get<string>()!
+                    accountEndpoint: config!.GetRequiredSection("COSMOS_ENDPOINT").Get<string>(),
+                    authKeyOrResourceToken: config!.GetRequiredSection("COSMOS_KEY").Get<string>()!
                 );
 
-                database = cosmosClient.GetDatabase(id: databaseName);
+                database = cosmosClient.GetDatabase(id: db);
 
-                // Container reference with creation if it does not already exist
                 cosmosContainer = await database.CreateContainerIfNotExistsAsync(
-                    id: containerName,
+                    id: container,
                     partitionKeyPath: partitionKey,
                     throughput: 400
                 );
@@ -47,21 +35,21 @@ namespace PakScraper
             }
             catch (CosmosException e)
             {
-                Log(ConsoleColor.Red, e.GetType().ToString());
+                LogError(e.GetType().ToString());
                 Log(ConsoleColor.Red,
                 "Error Connecting to CosmosDB - check appsettings.json, endpoint or key may be expired");
                 return false;
             }
             catch (HttpRequestException e)
             {
-                Log(ConsoleColor.Red, e.GetType().ToString());
+                LogError(e.GetType().ToString());
                 Log(ConsoleColor.Red,
                 "Error Connecting to CosmosDB - check firewall and internet status");
                 return false;
             }
             catch (Exception e)
             {
-                Log(ConsoleColor.Red, e.GetType().ToString());
+                LogError(e.GetType().ToString());
                 Log(ConsoleColor.Red,
                 "Error Connecting to CosmosDB - make sure appsettings.json is created and contains:");
                 Log(ConsoleColor.White,
@@ -140,7 +128,9 @@ namespace PakScraper
             string newCategories = string.Join(" ", scrapedProduct.category);
             bool otherDataHasChanged =
                 dbProduct!.size != scrapedProduct.size ||
-                oldCategories != newCategories
+                oldCategories != newCategories ||
+                dbProduct.sourceSite != scrapedProduct.sourceSite ||
+                dbProduct.name != scrapedProduct.name
             ;
 
             // If price has changed and not on the same day, we can update it
@@ -155,14 +145,14 @@ namespace PakScraper
 
                 // Log price change with different verb and colour depending on price change direction
                 bool priceTrendingDown = scrapedProduct.currentPrice < dbProduct!.currentPrice;
-                string priceTrendText = "Price " + (priceTrendingDown ? "Decreased" : "Increased") + ":";
+                string priceTrendText = "   Price " + (priceTrendingDown ? "Down" : "Up  ") + ":";
 
                 Log(priceTrendingDown ? ConsoleColor.Green : ConsoleColor.Red,
                     $"{priceTrendText} {dbProduct.name.PadRight(40).Substring(0, 40)} from " +
                     $"${dbProduct.currentPrice} to ${scrapedProduct.currentPrice}"
                 );
 
-                 // Return new product with updated data
+                // Return new product with updated data
                 return new Product(
                     dbProduct.id,
                     scrapedProduct.name,
@@ -193,6 +183,15 @@ namespace PakScraper
                 // Else existing DB Product has not changed
                 return null;
             }
+        }
+
+        public enum UpsertResponse
+        {
+            NewProduct,
+            PriceUpdated,
+            NonPriceUpdated,
+            AlreadyUpToDate,
+            Failed
         }
 
         // Inserts a new Product into CosmosDB
