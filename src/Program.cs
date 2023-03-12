@@ -139,7 +139,7 @@ namespace Scraper
                             {
                                 // Use Azure Function to upload product image
                                 string hiResImageUrl = await GetHiresImageUrl(productElement);
-                                if (hiResImageUrl != "" || hiResImageUrl != null)
+                                if (hiResImageUrl != "" && hiResImageUrl != null)
                                     await UploadImageUsingRestAPI(hiResImageUrl, scrapedProduct);
                             }
                         }
@@ -245,44 +245,6 @@ namespace Scraper
 
             // Swap url params to get hi-res version
             return imgUrl = imgUrl!.Replace("200x200", "master"); ;
-        }
-
-        // Image URL - get product image url from page, then upload using an Azure Function
-        public async static Task UploadImageUsingRestAPI(string imgUrl, Product product)
-        {
-            // Get AZURE_FUNC_URL from appsettings.json
-            // Example format:
-            // https://<azurefunc>.azurewebsites.net/api/ImageToS3?code=1234asdf==
-            string? funcUrl = config.GetRequiredSection("AZURE_FUNC_URL").Get<string>();
-
-            // Check funcUrl is valid
-            if (!funcUrl!.Contains("http"))
-                throw new Exception("AZURE_FUNC_URL in appsettings.json invalid. Should be in format:\n\n" +
-                "\"AZURE_FUNC_URL\": \"https://<azurefunc>.azurewebsites.net/api/ImageToS3?code=1234asdf==\"");
-
-            // Perform http get
-            string restUrl = funcUrl + "&filename=" + product.id + "&url=" + imgUrl;
-            var response = await httpclient.GetAsync(restUrl);
-            var responseMsg = await response.Content.ReadAsStringAsync();
-
-            // Log for successful upload of new image
-            if (responseMsg.Contains("Successfully Converted to Transparent WebP"))
-            {
-                Log(
-                    ConsoleColor.Gray,
-                    $"   New Image: {product.id.PadLeft(10)} | {product.name.PadRight(50).Substring(0, 50)}"
-                );
-            }
-            else if (responseMsg.Contains("already exists"))
-            {
-                // Do not log for existing images
-            }
-            else
-            {
-                // Log any other errors that may have occurred
-                Console.Write(responseMsg);
-            }
-            return;
         }
 
         // Takes a playwright element "div.fs-product-card", scrapes each of the desired data fields,
