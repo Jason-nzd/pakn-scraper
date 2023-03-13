@@ -145,11 +145,11 @@ namespace Scraper
 
                 // Log price change with different verb and colour depending on price change direction
                 bool priceTrendingDown = scrapedProduct.currentPrice < dbProduct!.currentPrice;
-                string priceTrendText = "   Price " + (priceTrendingDown ? "Down" : "Up  ") + ":";
+                string priceTrendText = "  Price " + (priceTrendingDown ? "Down" : "Up   ") + ":";
 
                 Log(priceTrendingDown ? ConsoleColor.Green : ConsoleColor.Red,
-                    $"{priceTrendText} {dbProduct.name.PadRight(40).Substring(0, 40)} from " +
-                    $"${dbProduct.currentPrice} to ${scrapedProduct.currentPrice}"
+                    $"{priceTrendText} {dbProduct.name.PadRight(40).Substring(0, 40)} | " +
+                    $"${dbProduct.currentPrice} > ${scrapedProduct.currentPrice}"
                 );
 
                 // Return new product with updated data
@@ -203,7 +203,7 @@ namespace Scraper
                 await cosmosContainer!.UpsertItemAsync(scrapedProduct, new PartitionKey(scrapedProduct.name));
 
                 Console.WriteLine(
-                    $"{"New Product:".PadLeft(15)} {scrapedProduct.id.PadRight(8)} | " +
+                    $"  New Product: {scrapedProduct.id.PadRight(8)} | " +
                     $"{scrapedProduct.name!.PadRight(40).Substring(0, 40)}" +
                     $" | $ {scrapedProduct.currentPrice.ToString().PadLeft(5)} | {scrapedProduct.category.Last()}"
                 );
@@ -212,7 +212,7 @@ namespace Scraper
             }
             catch (CosmosException e)
             {
-                Console.WriteLine($"{"CosmosDB:".PadLeft(15)} Upsert Error for new Product: {e.StatusCode}");
+                Console.WriteLine($"  CosmosDB: Upsert Error for new Product: {e.StatusCode}");
                 return UpsertResponse.Failed;
             }
         }
@@ -227,7 +227,7 @@ namespace Scraper
             {
                 foreach (var item in await feedIterator.ReadNextAsync())
                 {
-                    Console.WriteLine($"Deleting {item.id} - {item.name}");
+                    Console.WriteLine($"  Deleting {item.id} - {item.name}");
                     await cosmosContainer.DeleteItemAsync<Product>(item.id, new PartitionKey(item.name));
                 }
             }
