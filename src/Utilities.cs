@@ -56,7 +56,7 @@ namespace Scraper
             {
                 Log(
                     ConsoleColor.Gray,
-                    $"  New Image   : {product.id.PadLeft(9)} | {product.name.PadRight(50).Substring(0, 50)}"
+                    $"  New Image  : {product.id.PadLeft(9)} | {product.name.PadRight(50).Substring(0, 50)}"
                 );
             }
             else if (responseMsg.Contains("already exists"))

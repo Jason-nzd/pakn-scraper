@@ -10,8 +10,8 @@ namespace Scraper
 {
     public class Program
     {
-        private static int secondsDelayBetweenPageScrapes = 15;
-        static bool uploadImagesToAzureFunc = true;
+        static int secondsDelayBetweenPageScrapes = 15;
+        static bool alwaysUploadImageToAzureFunc = false;
 
         public record Product(
             string id,
@@ -135,7 +135,7 @@ namespace Scraper
                                     break;
                             }
 
-                            if (uploadImagesToAzureFunc)
+                            if (alwaysUploadImageToAzureFunc || response == UpsertResponse.NewProduct)
                             {
                                 // Use Azure Function to upload product image
                                 string hiResImageUrl = await GetHiresImageUrl(productElement);
