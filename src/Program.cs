@@ -21,7 +21,8 @@ namespace Scraper
             string[] category,
             string sourceSite,
             DatedPrice[] priceHistory,
-            DateTime lastUpdated
+            DateTime lastUpdated,
+            DateTime lastChecked
         );
         public record DatedPrice(DateTime date, float price);
 
@@ -301,6 +302,7 @@ namespace Scraper
                     categories!,
                     sourceSite,
                     priceHistory,
+                    todaysDate,
                     todaysDate
                 ));
             }

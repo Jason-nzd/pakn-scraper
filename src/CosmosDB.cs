@@ -75,30 +75,20 @@ namespace Scraper
 
                 if (response.StatusCode == System.Net.HttpStatusCode.OK)
                 {
-                    // Set local product from CosmosDB resource
+                    // Get product from CosmosDB resource
                     Product dbProduct = response.Resource;
 
-                    // Try build an updated product
-                    var updatedProduct = BuildUpdatedProduct(dbProduct, scrapedProduct);
+                    // Build an updated product with values from both the DB and scraped products
+                    ProductResponse productResponse = BuildUpdatedProduct(dbProduct, scrapedProduct);
 
-                    // If updatedProduct is null, it does not need updating
-                    if (updatedProduct == null) return UpsertResponse.AlreadyUpToDate;
+                    // Upsert the updated product back to CosmosDB
+                    await cosmosContainer!.UpsertItemAsync(
+                        productResponse.product,
+                        new PartitionKey(productResponse.product.name)
+                    );
 
-                    else
-                    {
-                        // Upsert the updated product back to CosmosDB
-                        await cosmosContainer!.UpsertItemAsync(
-                            updatedProduct!,
-                            new PartitionKey(updatedProduct!.name)
-                        );
-
-                        // Return UpsertResponse based on price chance or info-only change
-                        if (updatedProduct.currentPrice != dbProduct.currentPrice)
-                        {
-                            return UpsertResponse.PriceUpdated;
-                        }
-                        else return UpsertResponse.NonPriceUpdated;
-                    }
+                    // Return the UpsertResponse based on what data has changed
+                    return productResponse.upsertResponse;
                 }
             }
             // Catch not found exception and prepare to upload a new Product
@@ -110,7 +100,6 @@ namespace Scraper
             catch (Exception e)
             {
                 Console.Write(e.ToString());
-                return UpsertResponse.Failed;
             }
 
             // Return failed if this part is ever reached
@@ -118,7 +107,7 @@ namespace Scraper
         }
 
         // Builds a new product with new data from scrapedProduct, and price history data from dbProduct
-        public static Product? BuildUpdatedProduct(Product dbProduct, Product scrapedProduct)
+        public static ProductResponse BuildUpdatedProduct(Product dbProduct, Product scrapedProduct)
         {
             // Check if price has changed
             bool priceHasChanged = dbProduct!.currentPrice != scrapedProduct.currentPrice;
@@ -145,7 +134,7 @@ namespace Scraper
 
                 // Log price change with different verb and colour depending on price change direction
                 bool priceTrendingDown = scrapedProduct.currentPrice < dbProduct!.currentPrice;
-                string priceTrendText = "  Price " + (priceTrendingDown ? "Down" : "Up   ") + ":";
+                string priceTrendText = "  Price " + (priceTrendingDown ? "Down " : "Up   ") + ":";
 
                 Log(priceTrendingDown ? ConsoleColor.Green : ConsoleColor.Red,
                     $"{priceTrendText} {dbProduct.name.PadRight(40).Substring(0, 40)} | " +
@@ -153,7 +142,7 @@ namespace Scraper
                 );
 
                 // Return new product with updated data
-                return new Product(
+                return new ProductResponse(UpsertResponse.PriceUpdated, new Product(
                     dbProduct.id,
                     scrapedProduct.name,
                     scrapedProduct.size,
@@ -161,13 +150,14 @@ namespace Scraper
                     scrapedProduct.category,
                     scrapedProduct.sourceSite,
                     updatedHistory.ToArray(),
-                    scrapedProduct.lastUpdated
-                );
+                    scrapedProduct.lastUpdated,
+                    scrapedProduct.lastChecked
+                ));
             }
             else if (otherDataHasChanged)
             {
                 // If only non-price data has changed, update non price/date fields
-                return new Product(
+                return new ProductResponse(UpsertResponse.NonPriceUpdated, new Product(
                     dbProduct.id,
                     scrapedProduct.name,
                     scrapedProduct.size,
@@ -175,13 +165,24 @@ namespace Scraper
                     scrapedProduct.category,
                     scrapedProduct.sourceSite,
                     dbProduct.priceHistory,
-                    dbProduct.lastUpdated
-                );
+                    dbProduct.lastUpdated,
+                    scrapedProduct.lastChecked
+                ));
             }
             else
             {
-                // Else existing DB Product has not changed
-                return null;
+                // Else existing DB Product has not changed, update only lastChecked
+                return new ProductResponse(UpsertResponse.AlreadyUpToDate, new Product(
+                    dbProduct.id,
+                    dbProduct.name,
+                    dbProduct.size,
+                    dbProduct.currentPrice,
+                    dbProduct.category,
+                    dbProduct.sourceSite,
+                    dbProduct.priceHistory,
+                    dbProduct.lastUpdated,
+                    scrapedProduct.lastChecked
+                ));
             }
         }
 
@@ -192,6 +193,18 @@ namespace Scraper
             NonPriceUpdated,
             AlreadyUpToDate,
             Failed
+        }
+
+        public struct ProductResponse
+        {
+            public UpsertResponse upsertResponse;
+            public Product product;
+
+            public ProductResponse(UpsertResponse upsertResponse, Product product) : this()
+            {
+                this.upsertResponse = upsertResponse;
+                this.product = product;
+            }
         }
 
         // Inserts a new Product into CosmosDB

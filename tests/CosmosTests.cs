@@ -1,6 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using static Scraper.Program;
 using static Scraper.CosmosDB;
+using static Scraper.Program;
 
 namespace ScraperTests
 {
@@ -16,7 +16,7 @@ namespace ScraperTests
             DatedPrice oldDatedPrice = new DatedPrice(oldDate, oldPrice);
 
             Product dbProduct = new Product("1234", "milk", "2l", oldPrice, new string[] { "milk" }, "site",
-                new DatedPrice[] { oldDatedPrice }, oldDate);
+                new DatedPrice[] { oldDatedPrice }, oldDate, oldDate);
 
             // Create sample product scraped days later, but with the same scraped data
             float newPrice = 3.65f;
@@ -24,10 +24,10 @@ namespace ScraperTests
             DatedPrice newDatedPrice = new DatedPrice(newDate, newPrice);
 
             Product scrapedProduct = new Product("1234", "milk", "2l", newPrice, new string[] { "milk" }, "site",
-                new DatedPrice[] { newDatedPrice }, newDate);
+                new DatedPrice[] { newDatedPrice }, newDate, newDate);
 
-            // Assert that null is returned, representing no updatedProduct was built
-            Assert.IsTrue(BuildUpdatedProduct(dbProduct, scrapedProduct) == null);
+            // Assert that correct UpsertResponse is returned
+            Assert.IsTrue(BuildUpdatedProduct(dbProduct, scrapedProduct).upsertResponse == UpsertResponse.AlreadyUpToDate);
         }
 
         [TestMethod]
@@ -39,7 +39,7 @@ namespace ScraperTests
             DatedPrice oldDatedPrice = new DatedPrice(oldDate, oldPrice);
 
             Product dbProduct = new Product("1234", "milk", "2l", oldPrice, new string[] { "milk" }, "site",
-                new DatedPrice[] { oldDatedPrice }, oldDate);
+                new DatedPrice[] { oldDatedPrice }, oldDate, oldDate);
 
             // Create sample product scraped days later, with increased price
             float newPrice = 5.20f;
@@ -47,9 +47,9 @@ namespace ScraperTests
             DatedPrice newDatedPrice = new DatedPrice(newDate, newPrice);
 
             Product scrapedProduct = new Product("1234", "milk", "2l", newPrice, new string[] { "milk" }, "site",
-                new DatedPrice[] { newDatedPrice }, newDate);
+                new DatedPrice[] { newDatedPrice }, newDate, newDate);
 
-            Product updatedProduct = BuildUpdatedProduct(dbProduct, scrapedProduct)!;
+            Product updatedProduct = BuildUpdatedProduct(dbProduct, scrapedProduct).product;
 
             // Assert that the price history array length has increased by one
             Assert.IsTrue(updatedProduct.priceHistory.Count() == dbProduct.priceHistory.Count() + 1,
@@ -65,7 +65,7 @@ namespace ScraperTests
             DatedPrice oldDatedPrice = new DatedPrice(oldDate, oldPrice);
 
             Product dbProduct = new Product("1234", "milk", "2l", oldPrice, new string[] { "milk" }, "site",
-                new DatedPrice[] { oldDatedPrice }, oldDate);
+                new DatedPrice[] { oldDatedPrice }, oldDate, oldDate);
 
             // Create sample product scraped days later, with increased price
             float newPrice = 5.20f;
@@ -73,9 +73,9 @@ namespace ScraperTests
             DatedPrice newDatedPrice = new DatedPrice(newDate, newPrice);
 
             Product scrapedProduct = new Product("1234", "milk", "2l", newPrice, new string[] { "milk" }, "site",
-                new DatedPrice[] { newDatedPrice }, newDate);
+                new DatedPrice[] { newDatedPrice }, newDate, newDate);
 
-            Product updatedProduct = BuildUpdatedProduct(dbProduct, scrapedProduct)!;
+            Product updatedProduct = BuildUpdatedProduct(dbProduct, scrapedProduct).product;
 
             // Assert that currentPrice and lastUpdated were correctly set
             Assert.AreEqual<float>(updatedProduct.currentPrice, newPrice, updatedProduct.currentPrice + " - " + newPrice);

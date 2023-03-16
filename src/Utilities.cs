@@ -38,16 +38,16 @@ namespace Scraper
         {
             // Get AZURE_FUNC_URL from appsettings.json
             // Example format:
-            // https://<func-app-name>.azurewebsites.net/api/ImageToS3?code=<func-auth-code>
+            // https://<func-app-name>.azurewebsites.net/api/ImageToS3?code=<func-auth-code>&destination=s3://<bucket>/<optional-path>/
             string? funcUrl = config!.GetSection("AZURE_FUNC_URL").Value;
 
             // Check funcUrl is valid
             if (!funcUrl!.Contains("http"))
                 throw new Exception("AZURE_FUNC_URL in appsettings.json invalid. Should be in format:\n\n" +
-                "\"AZURE_FUNC_URL\": \"https://<func-app-name>.azurewebsites.net/api/ImageToS3?code=<func-auth-code>\"");
+                "\"AZURE_FUNC_URL\": \"https://<func-app-name>.azurewebsites.net/api/ImageToS3?code=<func-auth-code>&destination=s3://<bucket>/<optional-path>/\"");
 
             // Perform http get
-            string restUrl = funcUrl + "&destination=s3://supermarketimages/product-images/" + product.id + "&source=" + imgUrl;
+            string restUrl = funcUrl + product.id + "&source=" + imgUrl;
             var response = await httpclient.GetAsync(restUrl);
             var responseMsg = await response.Content.ReadAsStringAsync();
 
@@ -56,7 +56,7 @@ namespace Scraper
             {
                 Log(
                     ConsoleColor.Gray,
-                    $"  New Image  : {product.id.PadLeft(9)} | {product.name.PadRight(50).Substring(0, 50)}"
+                    $"  New Image  : {product.id.PadLeft(8)} | {product.name.PadRight(50).Substring(0, 50)}"
                 );
             }
             else if (responseMsg.Contains("already exists"))
