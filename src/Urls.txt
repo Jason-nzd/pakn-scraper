@@ -2,6 +2,15 @@ https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/fruit--vegetable
 https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/fruit--vegetables/fresh-vegetables?pg=1
 https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/fruit--vegetables/prepacked-fresh-fruit?pg=1
 https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/fruit--vegetables/prepacked-fresh-vegetables?pg=1
+https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/fruit--vegetables/salad-bags?pg=1
+
+https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/bakery/biscuits--slices?pg=1
+https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/bakery/bread-rolls--buns?pg=1
+https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/bakery/fresh-breads--rolls?pg=1
+
+https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/bulk--loose-foods/bulk-dried-fruit?pg=1
+https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/bulk--loose-foods/bulk-nuts?pg=1
+https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/bulk--loose-foods/bulk-snacks--mixes?pg=1
 
 https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/butchery/fresh-sausages?pg=1
 https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/butchery/fresh-beef--lamb?pg=1
@@ -14,9 +23,26 @@ https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/butchery/prepack
 https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/butchery/prepacked-sausages?pg=1
 
 https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/dairy--eggs/eggs?pg=1
+https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/dairy--eggs/butter--spreads?pg=1
 https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/dairy--eggs/fresh-milk?pg=1
+https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/dairy--eggs/fresh-cream?pg=1
 https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/dairy--eggs/long-life-milk--milk-powder?pg=1
 https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/dairy--eggs/dairy--lactose-free?pg=1
+https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/dairy--eggs/sour-cream--cr%c3%a8me-fraiche?pg=1
+https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/dairy--eggs/yoghurt--dairy-food?pg=1
+
+https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/deli-salads--cooked-meats/bacon?pg=1
+https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/deli-salads--cooked-meats/chilled-pies--pastries?pg=1
+https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/deli-salads--cooked-meats/continental-sausage--salami?pg=1
+https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/deli-salads--cooked-meats/deli-meats?pg=1
+https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/deli-salads--cooked-meats/deli-salads?pg=1
+https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/deli-salads--cooked-meats/dips-pesto--pate?pg=1
+https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/deli-salads--cooked-meats/ham--pork?pg=1
+https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/deli-salads--cooked-meats/precooked-chicken--poultry?pg=1
+
+https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/seafood/fresh-smoked-fish?pg=1
+https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/seafood/frozen-fish--seafood?pg=1
+https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/seafood/fresh-shellfish?pg=1
 
 https://www.paknsave.co.nz/shop/category/chilled-frozen-and-desserts/cheese/cheese-blocks?pg=1
 https://www.paknsave.co.nz/shop/category/chilled-frozen-and-desserts/desserts/ice-cream--frozen-yoghurt?pg=1
