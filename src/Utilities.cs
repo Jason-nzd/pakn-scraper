@@ -71,6 +71,27 @@ namespace Scraper
             return;
         }
 
+        // Validates product values are within normal ranges
+        public static bool IsValidProduct(Product product)
+        {
+            try
+            {
+                if (product.name.Length < 4 || product.name.Length > 100) return false;
+                if (product.id.Length < 2 || product.id.Length > 20) return false;
+                if (
+                  product.currentPrice <= 0 || product.currentPrice > 999
+                )
+                {
+                    return false;
+                }
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
         // Reads lines from a txt file, then return as a List
         public static List<string>? ReadLinesFromFile(string fileName)
         {

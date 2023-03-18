@@ -293,8 +293,8 @@ namespace Scraper
                 // Create Price History array with a single element
                 DatedPrice[] priceHistory = new DatedPrice[] { todaysDatedPrice };
 
-                // Return completed Product record
-                return (new Product(
+                // Create product record with above values
+                Product product = new Product(
                     id,
                     name!,
                     size,
@@ -304,7 +304,12 @@ namespace Scraper
                     priceHistory,
                     todaysDate,
                     todaysDate
-                ));
+                );
+
+                // Validate then return completed product
+                if (IsValidProduct(product))
+                    return (product);
+                else throw new Exception(product.name);
             }
             catch (Exception e)
             {
