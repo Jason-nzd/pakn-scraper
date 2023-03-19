@@ -16,12 +16,20 @@ namespace Scraper
             {
                 string cleanURL = url;
 
-                // If url contains ? it has query options already set
-                if (url.Contains('?'))
+                // If url contains 'search?', keep the search parameter but strip the rest
+                if (url.Contains("search?"))
                 {
-                    // Strip any existing query options off of URL
-                    cleanURL = url.Substring(0, url.IndexOf('?'));
+                    // Strip out anything after the first & symbol, or until the end of the string
+                    int lastIndex = url.Contains('&') ? url.IndexOf('&') : url.Length - 1;
+                    cleanURL = url.Substring(0, lastIndex) + "&";
                 }
+
+                // Else strip all query parameters
+                else if (url.Contains('?'))
+                {
+                    cleanURL = url.Substring(0, url.IndexOf('?')) + "?";
+                }
+
                 // Replace query parameters with optimised ones,
                 //  such as limiting to certain sellers,
                 //  or showing a higher number of products
