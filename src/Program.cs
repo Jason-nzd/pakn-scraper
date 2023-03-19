@@ -1,4 +1,5 @@
-﻿using Microsoft.Playwright;
+﻿using System.Diagnostics;
+using Microsoft.Playwright;
 using Microsoft.Extensions.Configuration;
 using static Scraper.CosmosDB;
 using static Scraper.Utilities;
@@ -10,7 +11,7 @@ namespace Scraper
 {
     public class Program
     {
-        static int secondsDelayBetweenPageScrapes = 15;
+        static int secondsDelayBetweenPageScrapes = 11;
         static bool alwaysUploadImageToAzureFunc = false;
 
         public record Product(
@@ -50,6 +51,8 @@ namespace Scraper
             }
 
             // Establish Playwright browser
+            Stopwatch stopwatch = new Stopwatch();
+            stopwatch.Start();
             await EstablishPlaywright();
 
             // Connect to CosmosDB - end program if unable to connect
@@ -60,7 +63,6 @@ namespace Scraper
                         partitionKey: "/name",
                         container: "products"
                     )) return;
-
             }
 
             // Read lines from text file - end program if unable to read
@@ -75,10 +77,14 @@ namespace Scraper
                     ParseAndOptimiseURL(
                         url: line,
                         urlShouldContain: "paknsave.co.nz",
-                        replaceQueryParams: "?pg=1"
+                        replaceQueryParams: "pg=1"
                     );
                 if (validUrl != null) urls.Add(validUrl);
             }
+
+            Log(ConsoleColor.Yellow,
+                $"{urls.Count} pages to be scraped, with {secondsDelayBetweenPageScrapes}s delay between page scrape."
+            );
 
             // Optionally reverse the order of urls
             if (reverseMode) urls.Reverse();
@@ -91,16 +97,20 @@ namespace Scraper
             {
                 try
                 {
-                    // Try load page and wait for full content to dynamically load in
+                    // Log current sequence of page scrapes, the total num of pages to scrape
                     Log(ConsoleColor.Yellow,
                         $"\nLoading Page [{i + 1}/{urls.Count()}] {urls[i].PadRight(112).Substring(12, 100)}");
 
+                    // Try load page and wait for full content to dynamically load in
                     await playwrightPage!.GotoAsync(urls[i]);
                     await playwrightPage.WaitForSelectorAsync("span.fs-price-lockup__cents");
 
-                    // Query all product card entries
+                    // Query all product card entries, and log how many were found
                     var productElements = await playwrightPage.QuerySelectorAllAsync("div.fs-product-card");
-                    Log(ConsoleColor.Yellow, $"  {productElements.Count} products found");
+                    Log(ConsoleColor.Yellow,
+                        $"  {productElements.Count} products found \t" +
+                        $"Time Elapsed: {stopwatch.Elapsed.Minutes}:{stopwatch.Elapsed.Seconds}\t" +
+                        $"Category: {DeriveCategoryFromUrl(urls[i], urlMustContain: "/category/")}");
 
                     // Create per-page counters for logging purposes
                     int newCount = 0, priceUpdatedCount = 0, nonPriceUpdatedCount = 0, upToDateCount = 0;
@@ -182,9 +192,6 @@ namespace Scraper
                 // This page has now completed scraping. A delay is added in-between each subsequent URL
                 if (i != urls.Count() - 1)
                 {
-                    Log(ConsoleColor.Gray,
-                        $"Waiting {secondsDelayBetweenPageScrapes}s until next page scrape.."
-                    );
                     Thread.Sleep(secondsDelayBetweenPageScrapes * 1000);
                 }
             }
