@@ -30,6 +30,9 @@ namespace Scraper
                     cleanURL = url.Substring(0, url.IndexOf('?')) + "?";
                 }
 
+                // If there were no existing query parameters, ensure a ? is added
+                else cleanURL += "?";
+
                 // Replace query parameters with optimised ones,
                 //  such as limiting to certain sellers,
                 //  or showing a higher number of products
