@@ -3,45 +3,79 @@ using static Scraper.Program;
 
 namespace Scraper
 {
+    public struct CategorisedURL
+    {
+        public string url;
+        public string[] categories;
+
+        public CategorisedURL(string url, string[] categories)
+        {
+            this.url = url;
+            this.categories = categories;
+        }
+    }
+
     public partial class Utilities
     {
-        // Parses urls and optimises query options for best results, returns null if invalid
-        public static string? ParseAndOptimiseURL(
-            string url,
+        // ParseLineToCategorisedURL()
+        // ---------------------------
+        // Parses a textLine containing a url and optional overridden category names to a CategorisedURL
+        public static CategorisedURL? ParseLineToCategorisedURL(
+            string textLine,
             string urlShouldContain = ".co.nz",
-            string replaceQueryParams = "")
+            string replaceQueryParamsWith = "")
         {
-            // If string contains desired string, such as .co.nz, it should be a URL
-            if (url.Contains(urlShouldContain))
+            // Get url from the first section
+            string url = textLine.Split(' ').First();
+
+            // If url doesn't contain desired section, return null
+            if (!url.Contains(urlShouldContain)) return null;
+
+            // Optimise query parameters
+            url = OptimiseURLQueryParameters(url, replaceQueryParamsWith);
+
+            // Derive category from url
+            string[] categories = { DeriveCategoryFromURL(url) };
+
+            // If overridden categories are provided, override the derived categories
+            string overriddenCategoriesSection = textLine.Split(' ').Last();
+            if (overriddenCategoriesSection.Contains("categories="))
             {
-                string cleanURL = url;
-
-                // If url contains 'search?', keep the search parameter but strip the rest
-                if (url.Contains("search?"))
-                {
-                    // Strip out anything after the first & symbol, or until the end of the string
-                    int lastIndex = url.Contains('&') ? url.IndexOf('&') : url.Length - 1;
-                    cleanURL = url.Substring(0, lastIndex) + "&";
-                }
-
-                // Else strip all query parameters
-                else if (url.Contains('?'))
-                {
-                    cleanURL = url.Substring(0, url.IndexOf('?')) + "?";
-                }
-
-                // If there were no existing query parameters, ensure a ? is added
-                else cleanURL += "?";
-
-                // Replace query parameters with optimised ones,
-                //  such as limiting to certain sellers,
-                //  or showing a higher number of products
-                cleanURL += replaceQueryParams;
-
-                // Return cleaned url
-                return cleanURL;
+                categories = overriddenCategoriesSection.Replace("categories=", "").Split(",");
             }
-            else return null;
+
+            return new CategorisedURL(url, categories);
+        }
+
+        // Parses urls and optimises query options for best results, returns null if invalid
+        public static string OptimiseURLQueryParameters(string url, string replaceQueryParamsWith)
+        {
+            string cleanURL = url;
+
+            // If url contains 'search?', keep the search parameter but strip the rest
+            if (url.Contains("search?"))
+            {
+                // Strip out anything after the first & symbol, or until the end of the string
+                int lastIndex = url.Contains('&') ? url.IndexOf('&') : url.Length - 1;
+                cleanURL = url.Substring(0, lastIndex) + "&";
+            }
+
+            // Else strip all query parameters
+            else if (url.Contains('?'))
+            {
+                cleanURL = url.Substring(0, url.IndexOf('?')) + "?";
+            }
+
+            // If there were no existing query parameters, ensure a ? is added
+            else cleanURL += "?";
+
+            // Replace query parameters with optimised ones,
+            //  such as limiting to certain sellers,
+            //  or showing a higher number of products
+            cleanURL += replaceQueryParamsWith;
+
+            // Return cleaned url
+            return cleanURL;
         }
 
         // UploadImageUsingRestAPI() - sends an image url to an Azure Function API to be uploaded
@@ -142,23 +176,16 @@ namespace Scraper
         // Derives category name from url by taking the last /bracket/
         // www.domain.co.nz/c/food-pets-household/food-drink/pantry/milk-bread/milk
         // returns milk
-        public static string DeriveCategoryFromUrl(string url, string urlMustContain)
+        public static string DeriveCategoryFromURL(string url)
         {
-            // If url doesn't contain a section such as /food-drink/, return Uncategorised
-            if (url.IndexOf(urlMustContain) >= 0)
-            {
-                int categoriesStartIndex = url.IndexOf(urlMustContain);
-                int categoriesEndIndex = url.Contains("?") ? url.IndexOf("?") : url.Length;
-                string categoriesString =
-                    url.Substring(
-                        categoriesStartIndex,
-                        categoriesEndIndex - categoriesStartIndex
-                    );
-                string lastCategory = categoriesString.Split("/").Last();
-
-                return lastCategory;
-            }
-            else return "Uncategorised";
+            int categoriesEndIndex = url.Contains("?") ? url.IndexOf("?") : url.Length;
+            string categoriesString =
+                url.Substring(
+                    0,
+                    categoriesEndIndex
+                );
+            string lastCategory = categoriesString.Split("/").Last();
+            return lastCategory;
         }
 
         // Shorthand function for logging with provided colour

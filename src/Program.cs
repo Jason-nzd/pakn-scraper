@@ -70,47 +70,52 @@ namespace Scraper
             if (lines == null) return;
 
             // Parse and optimise each line into valid urls to be scraped
-            List<string> urls = new List<string>();
+            List<CategorisedURL> categorisedUrls = new List<CategorisedURL>();
             foreach (string line in lines)
             {
-                string? validUrl =
-                    ParseAndOptimiseURL(
-                        url: line,
+                CategorisedURL? categorisedURL =
+                    ParseLineToCategorisedURL(
+                        line,
                         urlShouldContain: "paknsave.co.nz",
-                        replaceQueryParams: "pg=1"
+                        replaceQueryParamsWith: "pg=1"
                     );
-                if (validUrl != null) urls.Add(validUrl);
+
+                if (categorisedURL != null) categorisedUrls.Add((CategorisedURL)categorisedURL);
             }
 
             Log(ConsoleColor.Yellow,
-                $"{urls.Count} pages to be scraped, with {secondsDelayBetweenPageScrapes}s delay between page scrape."
+                $"{categorisedUrls.Count} pages to be scraped, " +
+                $"with {secondsDelayBetweenPageScrapes}s delay between page scrape."
             );
 
             // Optionally reverse the order of urls
-            if (reverseMode) urls.Reverse();
+            if (reverseMode) categorisedUrls.Reverse();
 
             // Open a page and allow the geolocation detection system to set the desired location
             await OpenPageAndSetLocation();
 
             // Open up each URL and run the scraping function
-            for (int i = 0; i < urls.Count(); i++)
+            for (int i = 0; i < categorisedUrls.Count(); i++)
             {
                 try
                 {
+                    // Separate out url from categorisedUrl
+                    string url = categorisedUrls[i].url;
+
                     // Log current sequence of page scrapes, the total num of pages to scrape
                     Log(ConsoleColor.Yellow,
-                        $"\nLoading Page [{i + 1}/{urls.Count()}] {urls[i].PadRight(112).Substring(12, 100)}");
+                        $"\nLoading Page [{i + 1}/{categorisedUrls.Count()}] {url.PadRight(112).Substring(12, 100)}");
 
                     // Try load page and wait for full content to dynamically load in
-                    await playwrightPage!.GotoAsync(urls[i]);
+                    await playwrightPage!.GotoAsync(url);
                     await playwrightPage.WaitForSelectorAsync("span.fs-price-lockup__cents");
 
                     // Query all product card entries, and log how many were found
                     var productElements = await playwrightPage.QuerySelectorAllAsync("div.fs-product-card");
                     Log(ConsoleColor.Yellow,
-                        $"  {productElements.Count} products found \t" +
-                        $"Time Elapsed: {stopwatch.Elapsed.Minutes}:{stopwatch.Elapsed.Seconds}\t" +
-                        $"Category: {DeriveCategoryFromUrl(urls[i], urlMustContain: "/category/")}");
+                        $"{productElements.Count} Products Found \t" +
+                        $"Total Time Elapsed: {stopwatch.Elapsed.Minutes}:{stopwatch.Elapsed.Seconds.ToString().PadLeft(2, '0')}\t" +
+                        $"Categories: {String.Join(", ", categorisedUrls[i].categories)}");
 
                     // Create per-page counters for logging purposes
                     int newCount = 0, priceUpdatedCount = 0, nonPriceUpdatedCount = 0, upToDateCount = 0;
@@ -119,7 +124,12 @@ namespace Scraper
                     foreach (var productElement in productElements)
                     {
                         // Create Product object from playwright element
-                        Product? scrapedProduct = await ScrapeProductElementToRecord(productElement, urls[i]);
+                        Product? scrapedProduct =
+                            await ScrapeProductElementToRecord(
+                                productElement,
+                                url,
+                                categorisedUrls[i].categories
+                            );
 
                         if (!dryRunMode && scrapedProduct != null)
                         {
@@ -190,7 +200,7 @@ namespace Scraper
                 }
 
                 // This page has now completed scraping. A delay is added in-between each subsequent URL
-                if (i != urls.Count() - 1)
+                if (i != categorisedUrls.Count() - 1)
                 {
                     Thread.Sleep(secondsDelayBetweenPageScrapes * 1000);
                 }
@@ -257,7 +267,11 @@ namespace Scraper
 
         // Takes a playwright element "div.fs-product-card", scrapes each of the desired data fields,
         //  and then returns a completed Product record
-        private async static Task<Product?> ScrapeProductElementToRecord(IElementHandle productElement, string sourceUrl)
+        private async static Task<Product?> ScrapeProductElementToRecord(
+            IElementHandle productElement,
+            string sourceUrl,
+            string[] categories
+        )
         {
             try
             {
@@ -281,10 +295,6 @@ namespace Scraper
                 // Source website
                 string sourceSite = "paknsave.co.nz";
 
-                // Category
-                string lastCategory = DeriveCategoryFromUrl(sourceUrl, urlMustContain: "/category/");
-                string[] categories = new string[] { lastCategory };
-
                 // Price
                 var dollarSpan = await productElement.QuerySelectorAsync(".fs-price-lockup__dollars");
                 string dollarString = await dollarSpan!.InnerHTMLAsync();
@@ -306,7 +316,7 @@ namespace Scraper
                     name!,
                     size,
                     currentPrice,
-                    categories!,
+                    categories,
                     sourceSite,
                     priceHistory,
                     todaysDate,
