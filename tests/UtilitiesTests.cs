@@ -7,43 +7,27 @@ namespace ScraperTests
     public class UtilitiesTests
     {
         [TestMethod]
-        public void DeriveCategoryFromUrl_ArrayLengthForUncategorised()
-        {
-            string url = "asdf";
-            var result = DeriveCategoryFromUrl(url, "/category/");
-            Assert.AreEqual<int>(result.Length, 1);
-        }
-
-        [TestMethod]
-        public void DeriveCategoryFromUrl_UncategorisedValue()
-        {
-            string url = "asdf";
-            var result = DeriveCategoryFromUrl(url, "/category/");
-            Assert.AreEqual<string>(result, "Uncategorised");
-        }
-
-        [TestMethod]
-        public void DeriveCategoryFromUrl_ExcludesQueryParameters()
+        public void DeriveCategoryFromURL_ExcludesQueryParameters()
         {
             string url = "https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/dairy--eggs/fresh-milk?pg=1&asdf=123f";
-            var result = DeriveCategoryFromUrl(url, "/category/");
+            var result = DeriveCategoryFromURL(url);
             Assert.AreEqual<string>(result, "fresh-milk");
         }
 
         [TestMethod]
-        public void DeriveCategoryFromUrl_GetsCorrectCategories()
+        public void DeriveCategoryFromURL_GetsCorrectCategories()
         {
             string url =
                 "https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/dairy--eggs/fresh-milk?pg=1";
-            var result = DeriveCategoryFromUrl(url, "/category/");
+            var result = DeriveCategoryFromURL(url);
             Assert.AreEqual<string>(result, "fresh-milk");
         }
 
         [TestMethod]
-        public void DeriveCategoryFromUrl_WorksWithoutHttpSlash()
+        public void DeriveCategoryFromURL_WorksWithoutHttpSlash()
         {
             string url = "www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/dairy--eggs/fresh-milk?pg=1";
-            var result = DeriveCategoryFromUrl(url, "/category/");
+            var result = DeriveCategoryFromURL(url);
             Assert.AreEqual<string>(result, "fresh-milk");
         }
 
