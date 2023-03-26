@@ -83,7 +83,7 @@ namespace ScraperTests
         }
 
         [TestMethod]
-        public async void EstablishConnection_Exception()
+        public async Task EstablishConnection_Exception()
         {
             try
             {
