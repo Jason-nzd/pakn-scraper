@@ -291,6 +291,8 @@ namespace Scraper
                 var pTag = await aTag.QuerySelectorAsync("p");
                 string size = await pTag!.InnerHTMLAsync();
                 size = size.Replace("l", "L");  // capitalize L for litres
+                if (size == "ea") size = "Each";
+                if (size == "kg") size = "per kg";
 
                 // Source website
                 string sourceSite = "paknsave.co.nz";
