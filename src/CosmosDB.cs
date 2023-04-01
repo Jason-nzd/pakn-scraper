@@ -119,7 +119,8 @@ namespace Scraper
                 dbProduct!.size != scrapedProduct.size ||
                 oldCategories != newCategories ||
                 dbProduct.sourceSite != scrapedProduct.sourceSite ||
-                dbProduct.name != scrapedProduct.name
+                dbProduct.name != scrapedProduct.name ||
+                dbProduct.unitPrice != scrapedProduct.unitPrice
             ;
 
             // If price has changed and not on the same day, we can update it
@@ -151,7 +152,9 @@ namespace Scraper
                     scrapedProduct.sourceSite,
                     updatedHistory.ToArray(),
                     scrapedProduct.lastUpdated,
-                    scrapedProduct.lastChecked
+                    scrapedProduct.lastChecked,
+                    scrapedProduct.unitPrice,
+                    scrapedProduct.unitName
                 ));
             }
             else if (otherDataHasChanged)
@@ -166,7 +169,9 @@ namespace Scraper
                     scrapedProduct.sourceSite,
                     dbProduct.priceHistory,
                     dbProduct.lastUpdated,
-                    scrapedProduct.lastChecked
+                    scrapedProduct.lastChecked,
+                    scrapedProduct.unitPrice,
+                    scrapedProduct.unitName
                 ));
             }
             else
@@ -181,7 +186,9 @@ namespace Scraper
                     dbProduct.sourceSite,
                     dbProduct.priceHistory,
                     dbProduct.lastUpdated,
-                    scrapedProduct.lastChecked
+                    scrapedProduct.lastChecked,
+                    dbProduct.unitPrice,
+                    dbProduct.unitName
                 ));
             }
         }

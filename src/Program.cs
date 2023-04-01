@@ -17,13 +17,15 @@ namespace Scraper
         public record Product(
             string id,
             string name,
-            string size,
+            string? size,
             float currentPrice,
             string[] category,
             string sourceSite,
             DatedPrice[] priceHistory,
             DateTime lastUpdated,
-            DateTime lastChecked
+            DateTime lastChecked,
+            float? unitPrice,
+            string? unitName
         );
         public record DatedPrice(DateTime date, float price);
 
@@ -167,12 +169,15 @@ namespace Scraper
                         else if (dryRunMode && scrapedProduct != null)
                         {
                             // In Dry Run mode, print a log row for every product
+                            string unitString = scrapedProduct.unitPrice != null ?
+                                "$" + scrapedProduct.unitPrice + " /" + scrapedProduct.unitName : "";
+
                             Console.WriteLine(
-                                scrapedProduct.id.PadLeft(9) + " | " +
-                                scrapedProduct.name!.PadRight(40).Substring(0, 40) + " | " +
-                                scrapedProduct.size.PadRight(8) + " | $" +
+                                scrapedProduct!.id.PadLeft(9) + " | " +
+                                scrapedProduct.name!.PadRight(60).Substring(0, 60) + " | " +
+                                scrapedProduct.size!.PadRight(8) + " | $" +
                                 scrapedProduct.currentPrice.ToString().PadLeft(5) + " | " +
-                                scrapedProduct.category[0]
+                                unitString
                             );
                         }
                     }
@@ -312,6 +317,16 @@ namespace Scraper
                 // Create Price History array with a single element
                 DatedPrice[] priceHistory = new DatedPrice[] { todaysDatedPrice };
 
+                // Get derived unit price and unit name
+                string? unitPriceString = DeriveUnitPriceString(size, currentPrice);
+                float? unitPrice = null;
+                string? unitName = "";
+                if (unitPriceString != null)
+                {
+                    unitPrice = float.Parse(unitPriceString.Split("/")[0]);
+                    unitName = unitPriceString.Split("/")[1];
+                }
+
                 // Create product record with above values
                 Product product = new Product(
                     id,
@@ -322,7 +337,9 @@ namespace Scraper
                     sourceSite,
                     priceHistory,
                     todaysDate,
-                    todaysDate
+                    todaysDate,
+                    unitPrice,
+                    unitName
                 );
 
                 // Validate then return completed product

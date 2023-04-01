@@ -165,12 +165,13 @@ namespace Scraper
         // 'Anchor Blue Milk Powder 1kg' returns '1kg'
         public static string ExtractProductSize(string productName)
         {
-            // \s = whitespace char, \d = digit, \w+ = 1 more word chars, $ = end
-            string pattern = @"\s\d\w+$";
+            // \b = word boundary, \d+ = 1 or more digits, \.? optional period., 
+            // (g|kg|l|ml) = any of these words
+            string pattern = @"\b\d+\.?\d+?(g|kg|l|ml)\b";
 
             string result = "";
-            result = Regex.Match(productName, pattern).ToString().Trim();
-            return result;
+            result = Regex.Match(productName.ToLower(), pattern).ToString().Trim();
+            return result.Replace("l", "L").Replace("mL", "ml");
         }
 
         // Derives category name from url by taking the last /bracket/
@@ -186,6 +187,93 @@ namespace Scraper
                 );
             string lastCategory = categoriesString.Split("/").Last();
             return lastCategory;
+        }
+
+        // DeriveUnitPriceString()
+        // -----------------------
+        // Derives unit quantity, unit name, and price per unit of a product,
+        // Returns a string in format 450/ml
+
+        public static string? DeriveUnitPriceString(string productSize, float productPrice)
+        {
+            // Return early if productSize is blank
+            if (productSize == null || productSize.Length < 2) return null;
+
+            string? matchedUnit = null;
+            float? quantity = null;
+
+            // If size is simply 'kg', process it as 1kg
+            if (productSize == "kg" || productSize == "per kg")
+            {
+                quantity = 1;
+                matchedUnit = "kg";
+            }
+            else
+            {
+                // MatchedUnit is also derived from product size, 450ml = ml
+                matchedUnit = string.Join("", Regex.Matches(productSize, @"[A-Z]|[a-z]"));
+
+                // Quantity is derived from product size, 450ml = 450
+                // Can include decimals, 1.5kg = 1.5
+                try
+                {
+                    string quantityMatch = string.Join("", Regex.Matches(productSize, @"(\d|\.)"));
+                    quantity = float.Parse(quantityMatch);
+
+                }
+                catch (System.Exception)
+                {
+                    // If quantity cannot be parsed, the function will return null
+                }
+            }
+
+            //Log(ConsoleColor.DarkGreen, productSize + " = (" + quantity + ") (" + matchedUnit + ")");
+
+            if (matchedUnit != null && quantity > 0)
+            {
+                // Handle edge case where size contains a 'multiplier x sub-unit' - eg. 4 x 107mL
+                // let matchMultipliedSizeString = product.size?.match(/\d *\sx\s\d * mL$/ g)?.join('');
+                // if (matchMultipliedSizeString)
+                // {
+                //     const splitMultipliedSize = matchMultipliedSizeString.split('x');
+                //     const multiplier = parseInt(splitMultipliedSize[0].trim());
+                //     const subUnitSize = parseInt(splitMultipliedSize[1].trim());
+                //     quantity = multiplier * subUnitSize;
+                // }
+
+
+                // If units are in grams, convert to either /100g for under 500g, or /kg for over
+                if (matchedUnit == "g")
+                {
+                    if (quantity < 500)
+                    {
+                        quantity = quantity / 100;
+                        matchedUnit = "100g";
+                    }
+                    else
+                    {
+                        quantity = quantity / 1000;
+                        matchedUnit = "kg";
+                    }
+                }
+
+                // If units are in mL, divide by 1000 and use L instead
+                if (matchedUnit == "ml")
+                {
+                    quantity = quantity / 1000;
+                    matchedUnit = "L";
+                }
+
+                // Capitalize L for Litres
+                if (matchedUnit == "l") matchedUnit = "L";
+
+                // Set per unit price, rounded to 2 decimal points
+                string roundedUnitPrice = Math.Round((decimal)(productPrice / quantity), 2).ToString();
+
+                // Return in format 450/g
+                return roundedUnitPrice + "/" + matchedUnit;
+            }
+            return null;
         }
 
         // Shorthand function for logging with provided colour
