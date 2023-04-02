@@ -120,7 +120,9 @@ namespace Scraper
                 oldCategories != newCategories ||
                 dbProduct.sourceSite != scrapedProduct.sourceSite ||
                 dbProduct.name != scrapedProduct.name ||
-                dbProduct.unitPrice != scrapedProduct.unitPrice
+                dbProduct.unitPrice != scrapedProduct.unitPrice ||
+                dbProduct.unitName != scrapedProduct.unitName ||
+                dbProduct.originalUnitQuantity != scrapedProduct.originalUnitQuantity
             ;
 
             // If price has changed and not on the same day, we can update it
