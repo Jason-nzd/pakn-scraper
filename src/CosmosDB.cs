@@ -154,7 +154,8 @@ namespace Scraper
                     scrapedProduct.lastUpdated,
                     scrapedProduct.lastChecked,
                     scrapedProduct.unitPrice,
-                    scrapedProduct.unitName
+                    scrapedProduct.unitName,
+                    scrapedProduct.originalUnitQuantity
                 ));
             }
             else if (otherDataHasChanged)
@@ -171,7 +172,8 @@ namespace Scraper
                     dbProduct.lastUpdated,
                     scrapedProduct.lastChecked,
                     scrapedProduct.unitPrice,
-                    scrapedProduct.unitName
+                    scrapedProduct.unitName,
+                    scrapedProduct.originalUnitQuantity
                 ));
             }
             else
@@ -188,7 +190,8 @@ namespace Scraper
                     dbProduct.lastUpdated,
                     scrapedProduct.lastChecked,
                     dbProduct.unitPrice,
-                    dbProduct.unitName
+                    dbProduct.unitName,
+                    dbProduct.originalUnitQuantity
                 ));
             }
         }

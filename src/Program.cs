@@ -25,7 +25,8 @@ namespace Scraper
             DateTime lastUpdated,
             DateTime lastChecked,
             float? unitPrice,
-            string? unitName
+            string? unitName,
+            float? originalUnitQuantity
         );
         public record DatedPrice(DateTime date, float price);
 
@@ -321,10 +322,12 @@ namespace Scraper
                 string? unitPriceString = DeriveUnitPriceString(size, currentPrice);
                 float? unitPrice = null;
                 string? unitName = "";
+                float? originalUnitQuantity = null;
                 if (unitPriceString != null)
                 {
                     unitPrice = float.Parse(unitPriceString.Split("/")[0]);
                     unitName = unitPriceString.Split("/")[1];
+                    originalUnitQuantity = float.Parse(unitPriceString.Split("/")[2]);
                 }
 
                 // Create product record with above values
@@ -339,7 +342,8 @@ namespace Scraper
                     todaysDate,
                     todaysDate,
                     unitPrice,
-                    unitName
+                    unitName,
+                    originalUnitQuantity
                 );
 
                 // Validate then return completed product

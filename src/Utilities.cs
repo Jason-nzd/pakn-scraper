@@ -201,12 +201,14 @@ namespace Scraper
 
             string? matchedUnit = null;
             float? quantity = null;
+            float? originalUnitQuantity = null;
 
             // If size is simply 'kg', process it as 1kg
             if (productSize == "kg" || productSize == "per kg")
             {
                 quantity = 1;
                 matchedUnit = "kg";
+                originalUnitQuantity = 1;
             }
             else
             {
@@ -219,7 +221,7 @@ namespace Scraper
                 {
                     string quantityMatch = string.Join("", Regex.Matches(productSize, @"(\d|\.)"));
                     quantity = float.Parse(quantityMatch);
-
+                    originalUnitQuantity = quantity;
                 }
                 catch (System.Exception)
                 {
@@ -240,14 +242,14 @@ namespace Scraper
                     //Log(ConsoleColor.DarkGreen, productSize + " = (" + quantity + ") (" + matchedUnit + ")");
                 }
 
-                // If units are in grams, convert to /kg
+                // If units are in grams, normalize quantity and convert to /kg
                 if (matchedUnit == "g")
                 {
                     quantity = quantity / 1000;
                     matchedUnit = "kg";
                 }
 
-                // If units are in mL, convert to /L
+                // If units are in mL, normalize quantity and convert to /L
                 if (matchedUnit == "ml")
                 {
                     quantity = quantity / 1000;
@@ -260,8 +262,8 @@ namespace Scraper
                 // Set per unit price, rounded to 2 decimal points
                 string roundedUnitPrice = Math.Round((decimal)(productPrice / quantity), 2).ToString();
 
-                // Return in format 450/g
-                return roundedUnitPrice + "/" + matchedUnit;
+                // Return in format '450g cheese' = '0.45/kg/450'
+                return roundedUnitPrice + "/" + matchedUnit + "/" + originalUnitQuantity;
             }
             return null;
         }
