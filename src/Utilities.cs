@@ -227,37 +227,27 @@ namespace Scraper
                 }
             }
 
-            //Log(ConsoleColor.DarkGreen, productSize + " = (" + quantity + ") (" + matchedUnit + ")");
-
             if (matchedUnit != null && quantity > 0)
             {
                 // Handle edge case where size contains a 'multiplier x sub-unit' - eg. 4 x 107mL
-                // let matchMultipliedSizeString = product.size?.match(/\d *\sx\s\d * mL$/ g)?.join('');
-                // if (matchMultipliedSizeString)
-                // {
-                //     const splitMultipliedSize = matchMultipliedSizeString.split('x');
-                //     const multiplier = parseInt(splitMultipliedSize[0].trim());
-                //     const subUnitSize = parseInt(splitMultipliedSize[1].trim());
-                //     quantity = multiplier * subUnitSize;
-                // }
-
-
-                // If units are in grams, convert to either /100g for under 500g, or /kg for over
-                if (matchedUnit == "g")
+                string matchMultipliedSizeString = Regex.Match(productSize, @"\d+\sx\s\d+").ToString();
+                if (matchMultipliedSizeString.Length > 2)
                 {
-                    if (quantity < 500)
-                    {
-                        quantity = quantity / 100;
-                        matchedUnit = "100g";
-                    }
-                    else
-                    {
-                        quantity = quantity / 1000;
-                        matchedUnit = "kg";
-                    }
+                    int multiplier = int.Parse(matchMultipliedSizeString.Split(" x ")[0]);
+                    int subUnitSize = int.Parse(matchMultipliedSizeString.Split(" x ")[1]);
+                    quantity = multiplier * subUnitSize;
+                    matchedUnit = matchedUnit.Replace("x", "");
+                    //Log(ConsoleColor.DarkGreen, productSize + " = (" + quantity + ") (" + matchedUnit + ")");
                 }
 
-                // If units are in mL, divide by 1000 and use L instead
+                // If units are in grams, convert to /kg
+                if (matchedUnit == "g")
+                {
+                    quantity = quantity / 1000;
+                    matchedUnit = "kg";
+                }
+
+                // If units are in mL, convert to /L
                 if (matchedUnit == "ml")
                 {
                     quantity = quantity / 1000;
