@@ -238,7 +238,8 @@ namespace Scraper
                     int multiplier = int.Parse(matchMultipliedSizeString.Split(" x ")[0]);
                     int subUnitSize = int.Parse(matchMultipliedSizeString.Split(" x ")[1]);
                     quantity = multiplier * subUnitSize;
-                    matchedUnit = matchedUnit.Replace("x", "");
+                    originalUnitQuantity = quantity;
+                    matchedUnit = matchedUnit.ToLower().Replace("x", "");
                     //Log(ConsoleColor.DarkGreen, productSize + " = (" + quantity + ") (" + matchedUnit + ")");
                 }
 
@@ -261,6 +262,7 @@ namespace Scraper
 
                 // Set per unit price, rounded to 2 decimal points
                 string roundedUnitPrice = Math.Round((decimal)(productPrice / quantity), 2).ToString();
+                //Console.WriteLine(productPrice + " / " + quantity + " = " + roundedUnitPrice + "/" + matchedUnit);
 
                 // Return in format '450g cheese' = '0.45/kg/450'
                 return roundedUnitPrice + "/" + matchedUnit + "/" + originalUnitQuantity;
