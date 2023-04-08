@@ -17,7 +17,6 @@ namespace ScraperTests
 
             await EstablishPlaywright();
             Assert.IsTrue(browser!.IsConnected);
-
         }
 
         [TestMethod]
@@ -31,7 +30,6 @@ namespace ScraperTests
             await EstablishPlaywright();
             await playwrightPage!.GotoAsync("http://www.google.com");
             Assert.IsNotNull(playwrightPage);
-
         }
     }
 }
