@@ -6,12 +6,14 @@
     <RootNamespace>pak_scraper</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <ApplicationIcon>icon.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
     <Content Include="appsettings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="icon.ico" />
   </ItemGroup>
 
   <ItemGroup>
