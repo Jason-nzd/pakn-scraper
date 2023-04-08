@@ -167,10 +167,11 @@ namespace Scraper
         {
             // \b = word boundary, \d+ = 1 or more digits, \.? optional period., 
             // (g|kg|l|ml) = any of these words
-            string pattern = @"\b\d+\.?\d+?(g|kg|l|ml)\b";
+            string pattern = @"\d+(\.\d+)?(g|kg|l|ml)\b";
 
             string result = "";
             result = Regex.Match(productName.ToLower(), pattern).ToString().Trim();
+            Log(ConsoleColor.DarkGreen, result);
             return result.Replace("l", "L").Replace("mL", "ml");
         }
 
