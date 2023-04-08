@@ -212,8 +212,8 @@ namespace Scraper
             }
             else
             {
-                // MatchedUnit is also derived from product size, 450ml = ml
-                matchedUnit = string.Join("", Regex.Matches(productSize, @"[A-Z]|[a-z]"));
+                // MatchedUnit is derived from product size, 450ml = ml
+                matchedUnit = string.Join("", Regex.Matches(productSize.ToLower(), @"(g|kg|ml|l)\b"));
 
                 // Quantity is derived from product size, 450ml = 450
                 // Can include decimals, 1.5kg = 1.5
@@ -229,7 +229,7 @@ namespace Scraper
                 }
             }
 
-            if (matchedUnit != null && quantity > 0)
+            if (matchedUnit.Length > 0 && quantity > 0)
             {
                 // Handle edge case where size contains a 'multiplier x sub-unit' - eg. 4 x 107mL
                 string matchMultipliedSizeString = Regex.Match(productSize, @"\d+\sx\s\d+").ToString();
