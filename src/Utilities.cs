@@ -171,7 +171,7 @@ namespace Scraper
 
             string result = "";
             result = Regex.Match(productName.ToLower(), pattern).ToString().Trim();
-            Log(ConsoleColor.DarkGreen, result);
+
             return result.Replace("l", "L").Replace("mL", "ml");
         }
 
@@ -188,6 +188,21 @@ namespace Scraper
                 );
             string lastCategory = categoriesString.Split("/").Last();
             return lastCategory;
+        }
+
+        // GetOverridenProductSize()
+        // ---------------------------
+        // Checks a txt file to see if the product should use a manually overridden size.
+
+        public static string GetOverridenProductSize(string id, string productSize)
+        {
+            List<string> overrideLines = ReadLinesFromFile("SizeOverrides.txt")!;
+
+            foreach (string line in overrideLines)
+            {
+                if (line.Split(' ')[0] == id) return line.Split(' ')[1];
+            }
+            return productSize;
         }
 
         // DeriveUnitPriceString()
@@ -285,6 +300,12 @@ namespace Scraper
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine(text);
             Console.ForegroundColor = ConsoleColor.White;
+        }
+
+        public class ProductSizeOverride
+        {
+            public string? id;
+            public string? overriddenSize;
         }
     }
 }
