@@ -1,3 +1,6 @@
+# If a product size cannot be scraped, it can manually be specified here.
+# Place product IDs and manually specified product size, one product per line.
+
 P5019270 1020g
 P5026036 1020g
 P5012168 1020g
