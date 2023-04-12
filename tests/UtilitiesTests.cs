@@ -86,5 +86,19 @@ namespace ScraperTests
             string? unitPriceString = DeriveUnitPriceString("kg", 3f);
             Assert.AreEqual<string>(unitPriceString, "3/kg/1", unitPriceString);
         }
+
+        [TestMethod]
+        public void GetOverridenProductSize_Match()
+        {
+            string productSize = GetOverridenProductSize("P5022829", "10 pack");
+            Assert.AreEqual<string>(productSize, "800g");
+        }
+
+        [TestMethod]
+        public void GetOverridenProductSize_NoMatch()
+        {
+            string productSize = GetOverridenProductSize("P501234", "10 pack");
+            Assert.AreEqual<string>(productSize, "10 pack");
+        }
     }
 }
