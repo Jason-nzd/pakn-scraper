@@ -23,6 +23,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="SizeOverrides.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="Urls.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
