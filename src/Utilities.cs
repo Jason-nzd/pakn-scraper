@@ -149,7 +149,7 @@ namespace Scraper
 
                 foreach (string line in lines)
                 {
-                    if (line != null) result.Add(line);
+                    if (line != null && !line.StartsWith("#")) result.Add(line.Trim());
                 }
 
                 return result;
@@ -190,11 +190,11 @@ namespace Scraper
             return lastCategory;
         }
 
-        // GetOverridenProductSize()
+        // GetOverriddenProductSize()
         // ---------------------------
         // Checks a txt file to see if the product should use a manually overridden size.
 
-        public static string GetOverridenProductSize(string id, string productSize)
+        public static string GetOverriddenProductSize(string id, string productSize)
         {
             List<string> overrideLines = ReadLinesFromFile("SizeOverrides.txt")!;
 
@@ -300,12 +300,6 @@ namespace Scraper
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine(text);
             Console.ForegroundColor = ConsoleColor.White;
-        }
-
-        public class ProductSizeOverride
-        {
-            public string? id;
-            public string? overriddenSize;
         }
     }
 }
