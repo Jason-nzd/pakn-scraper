@@ -88,16 +88,16 @@ namespace ScraperTests
         }
 
         [TestMethod]
-        public void GetOverridenProductSize_Match()
+        public void GetOverriddenProductSize_Match()
         {
-            string productSize = GetOverridenProductSize("P5022829", "10 pack");
+            string productSize = GetOverriddenProductSize("P5022829", "10 pack");
             Assert.AreEqual<string>(productSize, "800g");
         }
 
         [TestMethod]
         public void GetOverridenProductSize_NoMatch()
         {
-            string productSize = GetOverridenProductSize("P501234", "10 pack");
+            string productSize = GetOverriddenProductSize("P501234", "10 pack");
             Assert.AreEqual<string>(productSize, "10 pack");
         }
     }

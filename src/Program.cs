@@ -299,7 +299,7 @@ namespace Scraper
                 size = size.Replace("l", "L");  // capitalize L for litres
                 if (size == "ea") size = "Each";
                 if (size == "kg") size = "per kg";
-                size = GetOverridenProductSize(id, size);
+                size = GetOverriddenProductSize(id, size);
 
                 // Source website
                 string sourceSite = "paknsave.co.nz";
