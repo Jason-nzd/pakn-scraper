@@ -5,8 +5,11 @@ https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/fruit--vegetable
 https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/fruit--vegetables/salad-bags?pg=1
 
 https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/bakery/biscuits--slices?pg=1 categories=biscuits
-https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/bakery/bread-rolls--buns?pg=1 categories=bread,bread-rolls
-https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/bakery/fresh-breads--rolls?pg=1 categories=bread
+https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/bakery/bread-rolls--buns?pg=1 categories=bread-rolls
+https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/bakery/fresh-breads--rolls?pg=1 categories=bread-rolls
+https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/bakery/sliced-bread?pg=1  categories=bread
+https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/bakery/wraps--pita-breads?pg=1 categories=wraps-specialty-bread
+https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/bakery/specialty-breads?pg=1 categories=wraps-specialty-bread
 
 https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/bulk--loose-foods/bulk-dried-fruit?pg=1
 https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/bulk--loose-foods/bulk-nuts?pg=1
