@@ -165,12 +165,96 @@ namespace Scraper
         // 'Anchor Blue Milk Powder 1kg' returns '1kg'
         public static string ExtractProductSize(string productName)
         {
-            // \b = word boundary, \d+ = 1 or more digits, \.? optional period., 
-            // (g|kg|l|ml) = any of these words
+            // \b = word boundary, \d+ = 1 or more digits, \. period, 
+            // (g|kg|l|ml) = any of these words, \s = whitespace, ? optional
+
+            string name = productName.ToLower();
+
+            // First try match 4 x 40ml style multiplied units
+            string multiplierPattern = @"\d+\s?x\s?\d+\s?(g|kg|l|ml)\b";
+            string multiplierResult =
+                Regex.Match(name, multiplierPattern).ToString();
+
+            if (multiplierResult.Length > 0)
+            {
+                // Split by 'x' into '4' and '40ml' sections
+                int packSize = int.Parse(Regex.Match(multiplierResult.Split('x')[0], @"\d+").ToString());
+                int quantity = int.Parse(Regex.Match(multiplierResult.Split('x')[1], @"\d+").ToString());
+
+                // Get unit name 
+                string unitName = Regex.Match(multiplierResult, @"(g|kg|l|ml)").ToString().ToLower();
+
+                // Parse to int and multiply together
+                float total = packSize * quantity;
+
+                // If units are in grams, normalize quantity and convert to /kg
+                if (unitName == "g")
+                {
+                    total = total / 1000;
+                    unitName = "kg";
+                }
+
+                // If units are in mL, normalize quantity and convert to /L
+                if (unitName == "ml")
+                {
+                    total = total / 1000;
+                    unitName = "L";
+                }
+
+                if (unitName == "l") unitName = unitName.Replace("l", "L");
+
+                Log(ConsoleColor.DarkGreen, productName + " > " + total.ToString() + unitName);
+
+                // Return original name '4 x 40ml' as '160ml'
+                return Math.Round(total, 2) + unitName;
+            }
+
+            // Try match '100ml 24pack' or '24 pack 100ml' style names
+            string packPattern = @"(\d+\s?(g|kg|l|ml)\s\d+\s?pack\b|\d+\s?pack\s\d+\s?(g|kg|l|ml))";
+            string packResult =
+                Regex.Match(name, packPattern).ToString();
+
+            if (packResult.Length > 0)
+            {
+
+                // Match 24 pack and parse to int
+                string packSizeString = Regex.Match(packResult, @"\d+\s?pack").ToString();
+                int packSize = int.Parse(packSizeString.Replace("pack", "").Trim());
+
+                // Match 100ml quantity
+                string quantityString = Regex.Match(packResult, @"\d+\s?(g|kg|l|ml)").ToString();
+                int quantity = int.Parse(Regex.Match(quantityString, @"\d+").ToString());
+
+                // Get unit name
+                string unitName = Regex.Match(packResult, @"(g|kg|l|ml)").ToString();
+
+                // Parse to int and multiply together
+                float total = packSize * quantity;
+
+                // If units are in grams, normalize quantity and convert to /kg
+                if (unitName == "g")
+                {
+                    total = total / 1000;
+                    unitName = "kg";
+                }
+
+                // If units are in mL, normalize quantity and convert to /L
+                if (unitName == "ml")
+                {
+                    total = total / 1000;
+                    unitName = "L";
+                }
+
+                if (unitName == "l") unitName = unitName.Replace("l", "L");
+
+                // Return original name '100ml 24pack' as '2.4L'
+                return Math.Round(total, 2) + unitName;
+            }
+
+            // Try match ordinary styled names such as Milk 350ml
             string pattern = @"\d+(\.\d+)?(g|kg|l|ml)\b";
 
-            string result = "";
-            result = Regex.Match(productName.ToLower(), pattern).ToString().Trim();
+            string result = Regex.Match(productName.ToLower(), pattern).ToString().Trim();
 
             return result.Replace("l", "L").Replace("mL", "ml");
         }
@@ -248,11 +332,11 @@ namespace Scraper
             if (matchedUnit.Length > 0 && quantity > 0)
             {
                 // Handle edge case where size contains a 'multiplier x sub-unit' - eg. 4 x 107mL
-                string matchMultipliedSizeString = Regex.Match(productSize, @"\d+\sx\s\d+").ToString();
+                string matchMultipliedSizeString = Regex.Match(productSize, @"\d+\s?x\s?\d+").ToString();
                 if (matchMultipliedSizeString.Length > 2)
                 {
-                    int multiplier = int.Parse(matchMultipliedSizeString.Split(" x ")[0]);
-                    int subUnitSize = int.Parse(matchMultipliedSizeString.Split(" x ")[1]);
+                    int multiplier = int.Parse(matchMultipliedSizeString.Split("x")[0].Trim());
+                    int subUnitSize = int.Parse(matchMultipliedSizeString.Split("x")[1].Trim());
                     quantity = multiplier * subUnitSize;
                     originalUnitQuantity = quantity;
                     matchedUnit = matchedUnit.ToLower().Replace("x", "");
