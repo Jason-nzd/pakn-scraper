@@ -19,7 +19,9 @@ namespace Scraper
     {
         // ParseLineToCategorisedURL()
         // ---------------------------
-        // Parses a textLine containing a url and optional overridden category names to a CategorisedURL
+        // Parses a textLine containing a url and optional overridden category names.
+        // Returns a CategorisedURL object or null if the line is invalid.
+
         public static CategorisedURL? ParseLineToCategorisedURL(
             string textLine,
             string urlShouldContain = ".co.nz",
@@ -47,7 +49,11 @@ namespace Scraper
             return new CategorisedURL(url, categories);
         }
 
-        // Parses urls and optimises query options for best results, returns null if invalid
+        // OptimiseURLQueryParameters
+        // --------------------------
+        // Parses urls and optimises query options for best results
+        // Returns null if invalid
+
         public static string OptimiseURLQueryParameters(string url, string replaceQueryParamsWith)
         {
             string cleanURL = url;
@@ -78,7 +84,10 @@ namespace Scraper
             return cleanURL;
         }
 
-        // UploadImageUsingRestAPI() - sends an image url to an Azure Function API to be uploaded
+        // UploadImageUsingRestAPI()
+        // -------------------------
+        // Sends an image url to an Azure Function API, where it will be uploaded.
+
         public async static Task UploadImageUsingRestAPI(string imgUrl, Product product)
         {
             // Get AZURE_FUNC_URL from appsettings.json
@@ -116,7 +125,10 @@ namespace Scraper
             return;
         }
 
+        // IsValidProduct()
+        // ----------------
         // Validates product values are within normal ranges
+
         public static bool IsValidProduct(Product product)
         {
             try
@@ -137,7 +149,10 @@ namespace Scraper
             }
         }
 
-        // Reads lines from a txt file, then return as a List
+        // ReadLinesFromFile()
+        // -------------------
+        // Reads lines from a txt file, then returns as a List
+
         public static List<string>? ReadLinesFromFile(string fileName)
         {
             try
@@ -161,8 +176,11 @@ namespace Scraper
             }
         }
 
+        // ExtractProductSize()
+        // --------------------
         // Extract potential product size from product name
         // 'Anchor Blue Milk Powder 1kg' returns '1kg'
+
         public static string ExtractProductSize(string productName)
         {
             // \b = word boundary, \d+ = 1 or more digits, \. period, 
@@ -249,9 +267,12 @@ namespace Scraper
             return result.Replace("l", "L").Replace("mL", "ml");
         }
 
+        // DeriveCategoryFromURL()
+        // -----------------------
         // Derives category name from url by taking the last /bracket/
-        // www.domain.co.nz/c/food-pets-household/food-drink/pantry/milk-bread/milk
-        // returns milk
+        // 'www.domain.co.nz/c/food-pets-household/food-drink/pantry/milk-bread/milk'
+        // returns 'milk'
+
         public static string DeriveCategoryFromURL(string url)
         {
             int categoriesEndIndex = url.Contains("?") ? url.IndexOf("?") : url.Length;
@@ -360,7 +381,10 @@ namespace Scraper
             return null;
         }
 
+        // Log()
+        // -----
         // Shorthand function for logging with provided colour
+
         public static void Log(ConsoleColor color, string text)
         {
             Console.ForegroundColor = color;
@@ -368,6 +392,8 @@ namespace Scraper
             Console.ForegroundColor = ConsoleColor.White;
         }
 
+        // LogError()
+        // ----------
         // Shorthand function for logging with red colour
         public static void LogError(string text)
         {
