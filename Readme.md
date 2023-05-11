@@ -64,16 +64,18 @@ dotnet run
 ## Sample Dry Run Output
 
 ```cmd
- P1234567 | Coconut Supreme Slice                                     | 350g     | $ 5.89 | $16.83 /kg
- P5345284 | Cookies Gluten Free Delicious Homestyle Choc Chip Cookie  | 250g     | $ 4.89 | $19.56 /kg
- P5678287 | Cookies Gluten Free Delicious Homestyle Macadamia Cookie  | 250g     | $ 4.89 | $19.56 /kg
- P3457825 | Belgium Slice                                             | Each     | $ 5.89 | 
- P5789285 | Cookies Gluten Free Delicious Homestyle Double Choc Chip  | 250g     | $ 4.89 | $19.56 /kg
- P2356288 | Slavica Bakery Crunchy Bran Biscuits With Sultanas        | 230g     | $ 4.49 | $19.52 /kg
- P2765307 | Sanniu Evergreen Variant Biscuits                         | 4 x 132g | $ 6.36 | $12.05 /kg
+ P1234567 | Coconut Supreme Slice                           | 350g     | $ 5.89 | $16.83 /kg
+ P5345284 | Cookies Gluten Free Delicious Choc Chip Cookie  | 250g     | $ 4.89 | $19.56 /kg
+ P5678287 | Cookies Gluten Free Delicious Macadamia Cookie  | 250g     | $ 4.89 | $19.56 /kg
+ P3457825 | Belgium Slice                                   | Each     | $ 5.89 | 
+ P5789285 | Cookies Gluten Free Delicious Double Choc Chip  | 250g     | $ 4.89 | $19.56 /kg
+ P2356288 | Bakery Crunchy Bran Biscuits With Sultanas      | 230g     | $ 4.49 | $19.52 /kg
+ P2765307 | Sanniu Evergreen Variant Biscuits               | 4 x 132g | $ 6.36 | $12.05 /kg
 ```
 
 ## Sample Product Stored in CosmosDB
+
+This sample was re-run on multiple days to capture changing prices.
 
 ```json
 {
