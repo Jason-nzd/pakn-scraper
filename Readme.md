@@ -1,12 +1,12 @@
-# Pak'n'Save Scraper
+# PaknSave Scraper
 
-Scrapes product pricing and info from The Pak'n'Save NZ website. Price snapshots can be saved to Azure CosmosDB, or this program can simply log to console. Images can be saved to AWS S3.
+Scrapes product pricing and info from the PaknSave NZ website. Product information and price snapshots can be stored on Azure CosmosDB, or this program can simply log to console. Images can be sent to an API for resizing, analysis and other processing.
 
-Requires .NET 6 SDK & Powershell. Azure CosmosDB and AWS S3 are optional.
+The scraper is powered by `Microsoft Playwright`. It requires `.NET 6 SDK` & `Powershell` to run. Azure CosmosDB is optional.
 
-## Setup
+## Quick Setup
 
-First clone this repo, then restore and build .NET packages with:
+First clone or download this repo, change directory into `/src`, then restore and build .NET packages with:
 
 ```powershell
 dotnet restore && dotnet build
@@ -18,15 +18,32 @@ Playwright Chromium web browser must be downloaded and installed using:
 pwsh bin/Debug/net6.0/playwright.ps1 install chromium
 ```
 
-If running in dry mode, the program is now ready to use.
+If running in dry mode, the program is now ready to use with:
 
-If using CosmosDB, create `appsettings.json` containing the endpoint and key using the format:
+```cmd
+dotnet run dry
+```
+
+## Advanced Setup with appsettings.json
+
+To set optional advanced parameters, create `appsettings.json`.
+
+If using CosmosDB, set the CosmosDB endpoint and key using the format:
 
 ```json
 {
   "COSMOS_ENDPOINT": "<your cosmosdb endpoint uri>",
   "COSMOS_KEY": "<your cosmosdb primary key>"
-  "<todo: also set aws s3 keys>"
+}
+```
+
+To override the default store with a specific location, set geolocation co-ordinates in long/lat format.
+The closest store to the co-ordinates will be selected.
+
+```json
+{
+    "GEOLOCATION_LAT": "-41.21",
+    "GEOLOCATION_LONG": "174.91"
 }
 ```
 
@@ -38,7 +55,7 @@ To dry run the scraper, logging each product to the console:
 dotnet run dry
 ```
 
-To run the scraper and save each product to the database:
+To run the scraper with both logging and storing of each product to the database:
 
 ```powershell
 dotnet run
@@ -47,36 +64,37 @@ dotnet run
 ## Sample Dry Run Output
 
 ```cmd
-P5003287 | Mainland Mild & Creamy Edam Cheese       | 1kg      | $16.99 | cheese-blocks
-P5013472 | Mainland Smooth & Creamy Colby Cheese    | 1kg      | $16.99 | cheese-blocks
-P5003259 | Mainland Tasty Aged Cheddar Cheese       | 250g     | $ 6.69 | cheese-blocks
-P5007407 | Rolling Meadow Tasty Cheese              | 800g     | $15.99 | cheese-blocks
-P5027950 | Mainland Tasty Aged Cheddar Cheese       | 500g     | $12.79 | cheese-blocks
+ P1234567 | Coconut Supreme Slice                                     | 350g     | $ 5.89 | $16.83 /kg
+ P5345284 | Cookies Gluten Free Delicious Homestyle Choc Chip Cookie  | 250g     | $ 4.89 | $19.56 /kg
+ P5678287 | Cookies Gluten Free Delicious Homestyle Macadamia Cookie  | 250g     | $ 4.89 | $19.56 /kg
+ P3457825 | Belgium Slice                                             | Each     | $ 5.89 | 
+ P5789285 | Cookies Gluten Free Delicious Homestyle Double Choc Chip  | 250g     | $ 4.89 | $19.56 /kg
+ P2356288 | Slavica Bakery Crunchy Bran Biscuits With Sultanas        | 230g     | $ 4.49 | $19.52 /kg
+ P2765307 | Sanniu Evergreen Variant Biscuits                         | 4 x 132g | $ 6.36 | $12.05 /kg
 ```
 
 ## Sample Product Stored in CosmosDB
 
 ```json
 {
-    "id": "P5003259",
-    "name": "Mainland Tasty Aged Cheddar Cheese",
-    "currentPrice": 6.69,
+    "id": "P1234567",
+    "name": "Coconut Supreme Slice",
+    "size": "350g",
+    "currentPrice": 5.89,
     "category": [
-        "chilled-frozen-and-desserts",
-        "cheese",
-        "cheese-blocks"
+        "biscuits"
     ],
-    "size": "250g",
-    "sourceSite": "paknsave.co.nz",
     "priceHistory": [
         {
-            "date": "Wed Feb 22 2023",
-            "price": 6.69
+            "date": "2023-05-04T01:00:00",
+            "price": 5.89
         }
         {
-            "date": "Wed Feb 14 2023",
-            "price": 7.99
+            "date": "2023-01-02T01:00:00",
+            "price": 5.49
         }
     ],
+    "unitPrice": 16.83,
+    "unitName": "kg",
 }
 ```
