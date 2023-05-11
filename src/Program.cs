@@ -5,7 +5,7 @@ using static Scraper.CosmosDB;
 using static Scraper.Utilities;
 
 // Pak Scraper
-// Scrapes product info and pricing from Pak n'Save NZ's website.
+// Scrapes product info and pricing from Pak n Save NZ's website.
 
 namespace Scraper
 {
@@ -392,20 +392,46 @@ namespace Scraper
         // Gives permission to webpage to use geolocation to set closest store location
         private static async Task OpenPageAndSetLocation()
         {
-            Log(ConsoleColor.Yellow, "Selecting store location using geo-location..");
 
-            // Set Geolocation
+            // Try get latitude and longitude from appsettings.json
+            float latitude, longitude;
+            try
+            {
+                latitude = float.Parse(config.GetSection("GEOLOCATION_LAT").Value!);
+                longitude = float.Parse(config.GetSection("GEOLOCATION_LONG").Value!);
+            }
+
+            // Return if no latitude and longitude are found
+            catch (ArgumentNullException)
+            {
+                Log(ConsoleColor.Yellow, "No geolocation found in appsettings.json, using default location");
+                return;
+            }
+
+            // Return if unable to parse values or for any other exception
+            catch (Exception)
+            {
+                Log(ConsoleColor.Yellow,
+                    "Invalid geolocation found in appsettings.json, ensure format is:\n" +
+                    "\"GEOLOCATION_LAT\": \"-41.21\"," +
+                    "\"GEOLOCATION_LONG\": \"174.91\"");
+                return;
+            }
+
+            // Set playwright geolocation using found latitude and longitude
             await playwrightPage!.Context.SetGeolocationAsync(
-                new Geolocation() { Latitude = -41.21f, Longitude = 174.91f }
+                new Geolocation() { Latitude = latitude, Longitude = longitude }
             );
+            Log(ConsoleColor.Yellow, $"Selecting store location using geo-location..({latitude}, {longitude})");
             await playwrightPage.Context.GrantPermissionsAsync(new string[] { "geolocation" });
 
             try
             {
-                // Goto any page
+                // Goto a page to trigger geolocation detection
                 await playwrightPage.GotoAsync("https://www.paknsave.co.nz/shop/deals");
 
-                // The page will automatically reload upon detection of geolocation
+                // The server side code will detect the geolocation,
+                //  and will automatically reload with the closet store set
                 Thread.Sleep(5000);
                 await playwrightPage.WaitForSelectorAsync("span.fs-price-lockup__cents");
 
