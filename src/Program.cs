@@ -88,7 +88,7 @@ namespace Scraper
 
             Log(ConsoleColor.Yellow,
                 $"{categorisedUrls.Count} pages to be scraped, " +
-                $"with {secondsDelayBetweenPageScrapes}s delay between page scrape."
+                $"with {secondsDelayBetweenPageScrapes}s delay between each page scrape."
             );
 
             // Optionally reverse the order of urls
@@ -422,7 +422,7 @@ namespace Scraper
             await playwrightPage!.Context.SetGeolocationAsync(
                 new Geolocation() { Latitude = latitude, Longitude = longitude }
             );
-            Log(ConsoleColor.Yellow, $"Selecting store location using geo-location..({latitude}, {longitude})");
+            Log(ConsoleColor.Yellow, $"Selecting closest store using geo-location: ({latitude}, {longitude})");
             await playwrightPage.Context.GrantPermissionsAsync(new string[] { "geolocation" });
 
             try

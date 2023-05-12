@@ -38,12 +38,12 @@ https://www.paknsave.co.nz/shop/Search?s=popularity&sd=0&f=tags%3DFresh%2520Seaf
 https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/seafood/frozen-fish--seafood?pg=1 categories=fresh-seafood
 https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/seafood/fresh-shellfish?pg=1 categories=fresh-seafood
 
-https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/bulk--loose-foods/bulk-dried-fruit?pg=1 categories=nut-fruit-mixes
+https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/bulk--loose-foods/bulk-dried-fruit?pg=1 categories=nuts-fruit-mix
 https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/bulk--loose-foods/bulk-nuts?pg=1 categories=nuts
-https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/bulk--loose-foods/bulk-snacks--mixes?pg=1 categories=nut-fruit-mixes
+https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/bulk--loose-foods/bulk-snacks--mixes?pg=1 categories=nuts-fruit-mix
 
-https://www.paknsave.co.nz/shop/category/chilled-frozen-and-desserts/cheese/cheese-blocks?pg=1 categories=cheese
-https://www.paknsave.co.nz/shop/category/chilled-frozen-and-desserts/cheese/cheese-slices?pg=1
+https://www.paknsave.co.nz/shop/category/chilled-frozen-and-desserts/cheese/cheese-blocks?pg=1 categories=cheese,cheese-blocks
+https://www.paknsave.co.nz/shop/category/chilled-frozen-and-desserts/cheese/cheese-slices?pg=1 categories=cheese,cheese-slices
 https://www.paknsave.co.nz/shop/category/chilled-frozen-and-desserts/desserts/ice-cream--frozen-yoghurt?pg=1 categories=ice-cream
 https://www.paknsave.co.nz/shop/category/chilled-frozen-and-desserts/desserts/frozen-bavarians--cheesecake?pg=1 categories=cheesecake
 https://www.paknsave.co.nz/shop/category/chilled-frozen-and-desserts/desserts/ice-blocks--ice-pops?pg=1 categories=ice-blocks
@@ -55,12 +55,12 @@ https://www.paknsave.co.nz/shop/category/chilled-frozen-and-desserts/frozen-food
 https://www.paknsave.co.nz/shop/category/pantry/hot-drinks/chocolate-milk-drink-mixes?pg=1 categories=drinking-chocolate
 https://www.paknsave.co.nz/shop/category/pantry/hot-drinks/black-teas?pg=1 categories=tea,black-tea
 https://www.paknsave.co.nz/shop/category/pantry/hot-drinks/chai-teas?pg=1 categories=tea,chai-tea
-https://www.paknsave.co.nz/shop/category/pantry/hot-drinks/coffee-capsules?pg=1 categories=coffee,coffee-capsules
-https://www.paknsave.co.nz/shop/category/pantry/hot-drinks/coffee-flavoured-sachets?pg=1 categories=coffee,instant-coffee
+https://www.paknsave.co.nz/shop/category/pantry/hot-drinks/coffee-capsules?pg=1 categories=coffee
+https://www.paknsave.co.nz/shop/category/pantry/hot-drinks/coffee-flavoured-sachets?pg=1 categories=coffee
 https://www.paknsave.co.nz/shop/category/pantry/hot-drinks/fresh-coffees?pg=1 categories=coffee
 https://www.paknsave.co.nz/shop/category/pantry/hot-drinks/fruit--herbal-teas?pg=1 categories=tea,herbal-tea
 https://www.paknsave.co.nz/shop/category/pantry/hot-drinks/green-teas?pg=1 categories=tea,green-tea
-https://www.paknsave.co.nz/shop/category/pantry/hot-drinks/instant-coffees?pg=1 categories=coffee,instant-coffee
+https://www.paknsave.co.nz/shop/category/pantry/hot-drinks/instant-coffees?pg=1 categories=coffee
 https://www.paknsave.co.nz/shop/category/pantry/hot-drinks/malt-milk-drink-mixes?pg=1 categories=drinking-chocolate
 
 https://www.paknsave.co.nz/shop/category/pantry/biscuits--crackers/biscuits--cookies?pg=1 categories=biscuits
@@ -79,17 +79,17 @@ https://www.paknsave.co.nz/shop/category/pantry/snack-foods/corn-chips?pg=1 cate
 https://www.paknsave.co.nz/shop/category/pantry/snack-foods/muesli-bars?pg=1 categories=muesli-bars
 https://www.paknsave.co.nz/shop/category/pantry/snack-foods/nut-bars--snacks?pg=1 categories=muesli-bars
 https://www.paknsave.co.nz/shop/category/pantry/snack-foods/cereal--snack-bars?pg=1 categories=muesli-bars
-https://www.paknsave.co.nz/shop/category/pantry/snack-foods/meat-snacks?pg=1 categories=beef-jerky
-https://www.paknsave.co.nz/shop/category/pantry/snack-foods/popcorn?pg=1
+https://www.paknsave.co.nz/shop/category/pantry/snack-foods/meat-snacks?pg=1 categories=other-snacks
+https://www.paknsave.co.nz/shop/category/pantry/snack-foods/popcorn?pg=1 categories=other-snacks
 
 https://www.paknsave.co.nz/shop/category/pantry/baking-supplies--sugar?pg=1 categories=baking
 https://www.paknsave.co.nz/shop/category/pantry/breakfast-cereals?pg=1 categories=cereal
 
-https://www.paknsave.co.nz/shop/category/pantry/canned--prepared-foods/baked-beans--spaghetti?pg=1 categories=beans-spaghetti
-https://www.paknsave.co.nz/shop/category/pantry/canned--prepared-foods/canned--dried-vegetables?pg=1 categories=canned-vegetables
-https://www.paknsave.co.nz/shop/category/pantry/canned--prepared-foods/canned-fish?pg=1
-https://www.paknsave.co.nz/shop/category/pantry/canned--prepared-foods/canned-fruit?pg=1
-https://www.paknsave.co.nz/shop/category/pantry/canned--prepared-foods/canned-meat?pg=1
+https://www.paknsave.co.nz/shop/category/pantry/canned--prepared-foods/baked-beans--spaghetti?pg=1 categories=baked-beans-spaghetti
+https://www.paknsave.co.nz/shop/category/pantry/canned--prepared-foods/canned--dried-vegetables?pg=1 categories=canned-fruit-veg
+https://www.paknsave.co.nz/shop/category/pantry/canned--prepared-foods/canned-fish?pg=1 categories=canned-meat-fish
+https://www.paknsave.co.nz/shop/category/pantry/canned--prepared-foods/canned-fruit?pg=1 categories=canned-fruit-veg
+https://www.paknsave.co.nz/shop/category/pantry/canned--prepared-foods/canned-meat?pg=1 categories=canned-meat-fish
 
 https://www.paknsave.co.nz/shop/category/pantry/condiments--dressings?pg=1 categories=sauces
 
@@ -119,7 +119,7 @@ https://www.paknsave.co.nz/shop/category/pets/pet-supplies/cat-treats?pg=1
 https://www.paknsave.co.nz/shop/category/pets/pet-supplies/dog-food?pg=1
 https://www.paknsave.co.nz/shop/category/pets/pet-supplies/dog-treats?pg=1
 
-https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/fruit--vegetables/salad-bags?pg=1
+https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/fruit--vegetables/salad-bags?pg=1 categories=salads-coleslaw
 https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/fruit--vegetables/prepacked-fresh-fruit?pg=1 categories=fresh-fruit
 https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/fruit--vegetables/prepacked-fresh-vegetables?pg=1 categories=fresh-vegetables
 https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/fruit--vegetables/fresh-vegetables?pg=1
