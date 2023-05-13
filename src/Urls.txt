@@ -51,6 +51,11 @@ https://www.paknsave.co.nz/shop/category/chilled-frozen-and-desserts/frozen-food
 https://www.paknsave.co.nz/shop/category/chilled-frozen-and-desserts/frozen-foods/frozen-beef-lamb--pork?pg=1 categories=frozen-beef-lamb
 https://www.paknsave.co.nz/shop/category/chilled-frozen-and-desserts/frozen-foods/frozen-chicken--poultry?pg=1 categories=frozen-chicken
 https://www.paknsave.co.nz/shop/category/chilled-frozen-and-desserts/frozen-foods/frozen-pizza--bases?pg=1 categories=pizza
+https://www.paknsave.co.nz/shop/category/chilled-frozen-and-desserts/frozen-foods/frozen-vegetables?pg=1
+https://www.paknsave.co.nz/shop/category/chilled-frozen-and-desserts/frozen-foods/frozen-fish?pg=1 categories=frozen-seafood
+https://www.paknsave.co.nz/shop/category/chilled-frozen-and-desserts/frozen-foods/frozen-pies?pg=1 categories=pies-sausage-rolls
+https://www.paknsave.co.nz/shop/category/chilled-frozen-and-desserts/frozen-foods/frozen-savouries?pg=1 categories=other-savouries
+https://www.paknsave.co.nz/shop/category/chilled-frozen-and-desserts/frozen-foods/frozen-vegetarian?pg=1 categories=other-savouries
 
 https://www.paknsave.co.nz/shop/category/pantry/hot-drinks/chocolate-milk-drink-mixes?pg=1 categories=drinking-chocolate
 https://www.paknsave.co.nz/shop/category/pantry/hot-drinks/black-teas?pg=1 categories=tea,black-tea
