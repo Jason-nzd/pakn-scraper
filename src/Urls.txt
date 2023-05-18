@@ -2,8 +2,8 @@ https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/bakery/biscuits-
 https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/bakery/bread-rolls--buns?pg=1 categories=bread-rolls
 https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/bakery/fresh-breads--rolls?pg=1 categories=bread-rolls
 https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/bakery/sliced-bread?pg=1  categories=bread
-https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/bakery/wraps--pita-breads?pg=1 categories=wraps-specialty-bread
-https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/bakery/specialty-breads?pg=1 categories=wraps-specialty-bread
+https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/bakery/wraps--pita-breads?pg=1 categories=specialty-bread
+https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/bakery/specialty-breads?pg=1 categories=specialty-bread
 
 https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/butchery/fresh-sausages?pg=1 categories=sausages
 https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/butchery/fresh-beef--lamb?pg=1 categories=beef-lamb
@@ -16,7 +16,7 @@ https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/butchery/prepack
 https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/butchery/prepacked-sausages?pg=1 categories=sausages
 
 https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/dairy--eggs/eggs?pg=1
-https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/dairy--eggs/butter--spreads?pg=1 categories=butter-spreads
+https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/dairy--eggs/butter--spreads?pg=1 categories=butter
 https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/dairy--eggs/fresh-milk?pg=1 categories=milk
 https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/dairy--eggs/flavoured-milk?pg=1 categories=milk,flavoured-milk
 https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/dairy--eggs/fresh-organic-milk?pg=1 categories=milk
@@ -35,12 +35,12 @@ https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/deli-salads--coo
 https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/deli-salads--cooked-meats/precooked-chicken--poultry?pg=1 categories=chicken
 
 https://www.paknsave.co.nz/shop/Search?s=popularity&sd=0&f=tags%3DFresh%2520Seafood%257CFresh%2520Smoked%2520Fish&q=salmon categories=salmon
-https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/seafood/frozen-fish--seafood?pg=1 categories=seafood
+https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/seafood/frozen-fish--seafood?pg=1 categories=frozen-seafood
 https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/seafood/fresh-shellfish?pg=1 categories=seafood
 
-https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/bulk--loose-foods/bulk-dried-fruit?pg=1 categories=nuts-fruit-mix
-https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/bulk--loose-foods/bulk-nuts?pg=1 categories=nuts
-https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/bulk--loose-foods/bulk-snacks--mixes?pg=1 categories=nuts-fruit-mix
+https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/bulk--loose-foods/bulk-dried-fruit?pg=1 categories=nuts-bulk-mix
+https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/bulk--loose-foods/bulk-nuts?pg=1 categories=nuts-bulk-mix
+https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/bulk--loose-foods/bulk-snacks--mixes?pg=1 categories=nuts-bulk-mix
 
 https://www.paknsave.co.nz/shop/category/chilled-frozen-and-desserts/cheese/cheese-blocks?pg=1 categories=cheese,cheese-blocks
 https://www.paknsave.co.nz/shop/category/chilled-frozen-and-desserts/cheese/cheese-slices?pg=1 categories=cheese,cheese-slices
@@ -76,7 +76,7 @@ https://www.paknsave.co.nz/shop/category/pantry/biscuits--crackers/crackers?pg=1
 https://www.paknsave.co.nz/shop/category/pantry/biscuits--crackers/rice-crackers?pg=1 categories=crackers
 https://www.paknsave.co.nz/shop/category/pantry/biscuits--crackers/rice-cakes?pg=1 categories=other-snacks
 
-https://www.paknsave.co.nz/shop/category/pantry/confectionery/boxed-chocolates?pg=1 categories=chocolate,chocolate-packs
+https://www.paknsave.co.nz/shop/category/pantry/confectionery/boxed-chocolates?pg=1 categories=chocolate-packs
 https://www.paknsave.co.nz/shop/category/pantry/confectionery/chocolate-blocks?pg=1 categories=chocolate
 https://www.paknsave.co.nz/shop/category/pantry/snack-foods/chips?pg=1 categories=chips
 https://www.paknsave.co.nz/shop/category/pantry/snack-foods/potato-chips?pg=1 categories=chips
