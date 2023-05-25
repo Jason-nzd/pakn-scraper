@@ -58,12 +58,10 @@ namespace Scraper
         {
             string cleanURL = url;
 
-            // If url contains 'search?', keep the search parameter but strip the rest
-            if (url.Contains("search?"))
+            // If url contains 'search?', keep all query parameters
+            if (url.ToLower().Contains("search?"))
             {
-                // Strip out anything after the first & symbol, or until the end of the string
-                int lastIndex = url.Contains('&') ? url.IndexOf('&') : url.Length - 1;
-                cleanURL = url.Substring(0, lastIndex) + "&";
+                return url;
             }
 
             // Else strip all query parameters
