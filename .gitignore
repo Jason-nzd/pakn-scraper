@@ -8,3 +8,6 @@
 /TestResults
 
 /src/appsettings.json
+
+*.bat
+*.lnk
