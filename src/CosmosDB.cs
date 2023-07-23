@@ -109,8 +109,11 @@ namespace Scraper
         // Builds a new product with new data from scrapedProduct, and price history data from dbProduct
         public static ProductResponse BuildUpdatedProduct(Product dbProduct, Product scrapedProduct)
         {
-            // Check if price has changed
-            bool priceHasChanged = dbProduct!.currentPrice != scrapedProduct.currentPrice;
+            // Measure the price difference between the new scraped product and the old db product
+            float priceDifference = Math.Abs(dbProduct.currentPrice - scrapedProduct.currentPrice);
+
+            // Check if price has changed by more than $0.05
+            bool priceHasChanged = priceDifference > 0.05;
 
             // Check if category or size has changed
             string oldCategories = string.Join(" ", dbProduct.category);
