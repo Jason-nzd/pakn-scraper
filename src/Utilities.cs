@@ -352,6 +352,18 @@ namespace Scraper
                     //Log(ConsoleColor.DarkGreen, productSize + " = (" + quantity + ") (" + matchedUnit + ")");
                 }
 
+                // Handle edge case where size is in format '72g each 5pack'
+                matchMultipliedSizeString = Regex.Match(productSize, @"\d+(g|ml)\seach\s\d+pack").ToString();
+                if (matchMultipliedSizeString.Length > 2)
+                {
+                    int multiplier = int.Parse(matchMultipliedSizeString.Split("each")[1].Trim());
+                    int subUnitSize = int.Parse(matchMultipliedSizeString.Split("each")[0].Trim());
+                    quantity = multiplier * subUnitSize;
+                    originalUnitQuantity = quantity;
+                    matchedUnit = matchedUnit.ToLower().Replace("each", "");
+                    //Log(ConsoleColor.DarkGreen, productSize + " = (" + quantity + ") (" + matchedUnit + ")");
+                }
+
                 // If units are in grams, normalize quantity and convert to /kg
                 if (matchedUnit == "g")
                 {
