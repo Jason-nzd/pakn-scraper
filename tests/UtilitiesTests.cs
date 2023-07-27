@@ -67,6 +67,13 @@ namespace ScraperTests
         }
 
         [TestMethod]
+        public void DeriveUnitPriceNoodles()
+        {
+            string? unitPriceString = DeriveUnitPriceString("72g each 5pack", 4.5f);
+            Assert.AreEqual<string>(unitPriceString, "12.5/g/360", unitPriceString);
+        }
+
+        [TestMethod]
         public void DeriveUnitPriceString_Multiplier()
         {
             string? unitPriceString = DeriveUnitPriceString("Pouch 4 x 107mL", 6.5f);
