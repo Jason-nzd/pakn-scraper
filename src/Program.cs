@@ -83,7 +83,18 @@ namespace Scraper
                         replaceQueryParamsWith: "pg=1"
                     );
 
-                if (categorisedURL != null) categorisedUrls.Add((CategorisedURL)categorisedURL);
+                if (categorisedURL != null)
+                {
+                    // If url is valid, add per page urls to list to be scraped
+                    int numPages = categorisedURL.Value.numPages;
+                    for (int i = 1; i <= numPages; i++)
+                    {
+                        string newUrl = categorisedURL.Value.url.Replace("pg=1", "pg=" + i.ToString());
+                        CategorisedURL perPageUrl = new CategorisedURL(newUrl, categorisedURL.Value.categories, -1);
+                        categorisedUrls.Add(perPageUrl);
+                    }
+
+                }
             }
 
             Log(ConsoleColor.Yellow,

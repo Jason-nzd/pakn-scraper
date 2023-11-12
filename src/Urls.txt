@@ -44,7 +44,7 @@ https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/bulk--loose-food
 
 https://www.paknsave.co.nz/shop/category/chilled-frozen-and-desserts/cheese/cheese-blocks?pg=1 categories=cheese,cheese-blocks
 https://www.paknsave.co.nz/shop/category/chilled-frozen-and-desserts/cheese/cheese-slices?pg=1 categories=cheese,cheese-slices
-https://www.paknsave.co.nz/shop/category/chilled-frozen-and-desserts/desserts/ice-cream--frozen-yoghurt?pg=1 categories=ice-cream
+https://www.paknsave.co.nz/shop/category/chilled-frozen-and-desserts/desserts/ice-cream--frozen-yoghurt?pg=1 categories=ice-cream pages=2
 https://www.paknsave.co.nz/shop/category/chilled-frozen-and-desserts/desserts/frozen-bavarians--cheesecake?pg=1 categories=pastries-cheesecake
 https://www.paknsave.co.nz/shop/category/chilled-frozen-and-desserts/desserts/ice-blocks--ice-pops?pg=1 categories=ice-blocks
 https://www.paknsave.co.nz/shop/category/chilled-frozen-and-desserts/frozen-foods/frozen-fries--potatoes?pg=1 categories=frozen-chips
@@ -68,8 +68,8 @@ https://www.paknsave.co.nz/shop/category/pantry/hot-drinks/green-teas?pg=1 categ
 https://www.paknsave.co.nz/shop/category/pantry/hot-drinks/instant-coffees?pg=1 categories=coffee
 https://www.paknsave.co.nz/shop/category/pantry/hot-drinks/malt-milk-drink-mixes?pg=1 categories=drinking-chocolate
 
-https://www.paknsave.co.nz/shop/category/pantry/biscuits--crackers/biscuits--cookies?pg=1 categories=biscuits
-https://www.paknsave.co.nz/shop/category/pantry/biscuits--crackers/chocolate-biscuits?pg=1 categories=biscuits
+https://www.paknsave.co.nz/shop/category/pantry/biscuits--crackers/biscuits--cookies?pg=1 categories=biscuits pages=3
+https://www.paknsave.co.nz/shop/category/pantry/biscuits--crackers/chocolate-biscuits?pg=1 categories=biscuits pages=2
 https://www.paknsave.co.nz/shop/category/pantry/biscuits--crackers/plain-sweet-biscuits?pg=1 categories=biscuits
 https://www.paknsave.co.nz/shop/category/pantry/biscuits--crackers/cr-me--jam-biscuits?pg=1 categories=biscuits
 https://www.paknsave.co.nz/shop/category/pantry/biscuits--crackers/crackers?pg=1 categories=crackers
@@ -77,8 +77,8 @@ https://www.paknsave.co.nz/shop/category/pantry/biscuits--crackers/rice-crackers
 https://www.paknsave.co.nz/shop/category/pantry/biscuits--crackers/rice-cakes?pg=1 categories=other-snacks
 
 https://www.paknsave.co.nz/shop/category/pantry/confectionery/boxed-chocolates?pg=1 categories=chocolate
-https://www.paknsave.co.nz/shop/category/pantry/confectionery/chocolate-blocks?pg=1 categories=chocolate
-https://www.paknsave.co.nz/shop/category/pantry/snack-foods/chips?pg=1 categories=chips
+https://www.paknsave.co.nz/shop/category/pantry/confectionery/chocolate-blocks?pg=1 categories=chocolate pages=5
+https://www.paknsave.co.nz/shop/category/pantry/snack-foods/chips?pg=1 categories=chips pages=2
 https://www.paknsave.co.nz/shop/category/pantry/snack-foods/potato-chips?pg=1 categories=chips
 https://www.paknsave.co.nz/shop/category/pantry/snack-foods/corn-chips?pg=1 categories=chips
 https://www.paknsave.co.nz/shop/category/pantry/snack-foods/muesli-bars?pg=1 categories=muesli-bars
@@ -119,9 +119,9 @@ https://www.paknsave.co.nz/shop/category/pantry/sauces-stock--marinades?pg=1 cat
 
 https://www.paknsave.co.nz/shop/category/pantry/world-foods?pg=1 categories=world-foods
 
-https://www.paknsave.co.nz/shop/category/pets/pet-supplies/cat-food?pg=1
+https://www.paknsave.co.nz/shop/category/pets/pet-supplies/cat-food?pg=1 pages=3
 https://www.paknsave.co.nz/shop/category/pets/pet-supplies/cat-treats?pg=1
-https://www.paknsave.co.nz/shop/category/pets/pet-supplies/dog-food?pg=1
+https://www.paknsave.co.nz/shop/category/pets/pet-supplies/dog-food?pg=1 pages=2
 https://www.paknsave.co.nz/shop/category/pets/pet-supplies/dog-treats?pg=1
 
 https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/fruit--vegetables/salad-bags?pg=1 categories=salads-coleslaw
