@@ -3,6 +3,20 @@ using static Scraper.Program;
 
 namespace Scraper
 {
+    // Struct for manual overriding scraped product size and category found in 'ProductOverrides.txt'
+    public struct SizeAndCategoryOverride
+    {
+        public string size;
+        public string category;
+
+        public SizeAndCategoryOverride(string size, string category)
+        {
+            this.size = size;
+            this.category = category;
+        }
+    }
+
+    // Struct for parsing URLs and additional data stored in 'Urls.txt'
     public struct CategorisedURL
     {
         public string url;
@@ -148,7 +162,7 @@ namespace Scraper
 
         // IsValidProduct()
         // ----------------
-        // Validates product values are within normal ranges
+        // Validates product values are within reasonable ranges
 
         public static bool IsValidProduct(Product product)
         {
@@ -306,19 +320,43 @@ namespace Scraper
             return lastCategory;
         }
 
-        // GetOverriddenProductSize()
+        // CheckProductOverrides()
         // ---------------------------
-        // Checks a txt file to see if the product should use a manually overridden size.
+        // Checks a txt file to see if the product should use a manually overridden values.
+        // Returns a SizeAndCategoryOverride object
 
-        public static string GetOverriddenProductSize(string id, string productSize)
+        public static SizeAndCategoryOverride CheckProductOverrides(string id)
         {
-            List<string> overrideLines = ReadLinesFromFile("SizeOverrides.txt")!;
+            List<string> overrideLines = ReadLinesFromFile("ProductOverrides.txt")!;
+
+            string sizeOverrideFound = "";
+            string categoryOverrideFound = "";
 
             foreach (string line in overrideLines)
             {
-                if (line.Split(' ')[0] == id) return line.Split(' ')[1];
+                string[] splitLine = line.Trim().Split(' ');
+
+                // Check if 1st section matches product ID
+                if (splitLine[0] == id)
+                {
+                    // Then loop through any additional sections
+                    for (int i = 1; i < splitLine.Length; i++)
+                    {
+                        // If any section matches weight/size/volume symbols, use this size override
+                        if (Regex.IsMatch(splitLine[i].ToLower(), @"\d+(g|kg|ml|l)"))
+                        {
+                            sizeOverrideFound = splitLine[i];
+                        }
+
+                        // Override any categories if found
+                        if (splitLine[i].Contains("category="))
+                        {
+                            categoryOverrideFound = splitLine[i].Replace("category=", "");
+                        }
+                    }
+                }
             }
-            return productSize;
+            return new SizeAndCategoryOverride(sizeOverrideFound, categoryOverrideFound);
         }
 
         // DeriveUnitPriceString()

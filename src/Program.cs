@@ -93,7 +93,6 @@ namespace Scraper
                         CategorisedURL perPageUrl = new CategorisedURL(newUrl, categorisedURL.Value.categories, -1);
                         categorisedUrls.Add(perPageUrl);
                     }
-
                 }
             }
 
@@ -310,7 +309,11 @@ namespace Scraper
                 size = size.Replace("l", "L");  // capitalize L for litres
                 if (size == "ea") size = "Each";
                 if (size == "kg") size = "per kg";
-                size = GetOverriddenProductSize(id, size);
+
+                // Check for manual product data overrides
+                SizeAndCategoryOverride overrides = CheckProductOverrides(id);
+                if (overrides.size != "") size = overrides.size;
+                if (overrides.category != "") categories = new string[] { overrides.category };
 
                 // Source website
                 string sourceSite = "paknsave.co.nz";
