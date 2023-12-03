@@ -76,7 +76,7 @@ https://www.paknsave.co.nz/shop/category/pantry/biscuits--crackers/crackers?pg=1
 https://www.paknsave.co.nz/shop/category/pantry/biscuits--crackers/rice-crackers?pg=1 categories=crackers
 https://www.paknsave.co.nz/shop/category/pantry/biscuits--crackers/rice-cakes?pg=1 categories=other-snacks
 
-https://www.paknsave.co.nz/shop/category/pantry/confectionery/boxed-chocolates?pg=1 categories=chocolate
+https://www.paknsave.co.nz/shop/category/pantry/confectionery/boxed-chocolates?pg=1 categories=boxed-chocolate pages=2
 https://www.paknsave.co.nz/shop/category/pantry/confectionery/chocolate-blocks?pg=1 categories=chocolate pages=5
 https://www.paknsave.co.nz/shop/category/pantry/snack-foods/chips?pg=1 categories=chips pages=2
 https://www.paknsave.co.nz/shop/category/pantry/snack-foods/potato-chips?pg=1 categories=chips
