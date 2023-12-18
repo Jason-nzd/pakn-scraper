@@ -92,7 +92,7 @@ https://www.paknsave.co.nz/shop/category/pantry/snack-foods/meat-snacks?pg=1 cat
 https://www.paknsave.co.nz/shop/category/pantry/snack-foods/popcorn?pg=1 categories=other-snacks
 
 https://www.paknsave.co.nz/shop/category/pantry/baking-supplies--sugar?pg=1 categories=baking pages=2
-https://www.paknsave.co.nz/shop/category/pantry/breakfast-cereals?pg=1 categories=cereal
+https://www.paknsave.co.nz/shop/category/pantry/breakfast-cereals?pg=1 categories=cereal pages=2
 
 https://www.paknsave.co.nz/shop/category/pantry/canned--prepared-foods/baked-beans--spaghetti?pg=1 categories=beans-spaghetti
 https://www.paknsave.co.nz/shop/category/pantry/canned--prepared-foods/canned--dried-vegetables?pg=1 categories=canned-fruit-veg
@@ -105,7 +105,7 @@ https://www.paknsave.co.nz/shop/category/pantry/condiments--dressings?pg=1 categ
 https://www.paknsave.co.nz/shop/category/pantry/jams-honey--spreads/honey?pg=1 categories=spreads,honey
 https://www.paknsave.co.nz/shop/category/pantry/jams-honey--spreads/jam--marmalade?pg=1 categories=spreads,jam
 https://www.paknsave.co.nz/shop/category/pantry/jams-honey--spreads/marmite--vegemite?pg=1 categories=spreads,marmite-vegemite
-https://www.paknsave.co.nz/shop/category/pantry/jams-honey--spreads/nut-spreads?pg=1 categories=spreads,peanut-butter
+https://www.paknsave.co.nz/shop/category/pantry/jams-honey--spreads/nut-spreads?pg=1 categories=spreads,peanut-butter pages=2
 https://www.paknsave.co.nz/shop/category/pantry/jams-honey--spreads/sweet-spreads?pg=1 categories=spreads,peanut-butter
 
 https://www.paknsave.co.nz/shop/category/pantry/pasta-rice--noodles/basmati-rices?pg=1 categories=rice
@@ -114,7 +114,8 @@ https://www.paknsave.co.nz/shop/category/pantry/pasta-rice--noodles/jasmine-rice
 https://www.paknsave.co.nz/shop/category/pantry/pasta-rice--noodles/long-grain-rices?pg=1 categories=rice
 https://www.paknsave.co.nz/shop/category/pantry/pasta-rice--noodles/short--medium-grain-rices?pg=1 categories=rice
 https://www.paknsave.co.nz/shop/category/pantry/pasta-rice--noodles/fresh-pastas?pg=1 categories=pasta
-https://www.paknsave.co.nz/shop/category/pantry/pasta-rice--noodles/noodle-meals?pg=1 categories=noodles
+https://www.paknsave.co.nz/shop/category/pantry/pasta-rice--noodles/dried-pastas?pg=1 categories=pasta pages=2
+https://www.paknsave.co.nz/shop/category/pantry/pasta-rice--noodles/noodle-meals?pg=1 categories=noodles pages=2
 https://www.paknsave.co.nz/shop/category/pantry/pasta-rice--noodles/noodles?pg=1 categories=noodles
 
 https://www.paknsave.co.nz/shop/category/pantry/salad--cooking-oils?pg=1 categories=oils-vinegars
@@ -123,7 +124,7 @@ https://www.paknsave.co.nz/shop/category/pantry/sauces-stock--marinades?pg=1 cat
 
 https://www.paknsave.co.nz/shop/category/pantry/world-foods?pg=1 categories=world-foods
 
-https://www.paknsave.co.nz/shop/category/pets/pet-supplies/cat-food?pg=1 pages=3
+https://www.paknsave.co.nz/shop/category/pets/pet-supplies/cat-food?pg=1 pages=2
 https://www.paknsave.co.nz/shop/category/pets/pet-supplies/cat-treats?pg=1
 https://www.paknsave.co.nz/shop/category/pets/pet-supplies/dog-food?pg=1 pages=2
 https://www.paknsave.co.nz/shop/category/pets/pet-supplies/dog-treats?pg=1
