@@ -39,3 +39,7 @@ P5027775 400g
 P5012144 269g
 P5025338 340g
 P5011662 850g
+P5003459 categories=ham
+P5106357 categories=ham
+P5259855 categories=ham
+P5019277 categories=ham
