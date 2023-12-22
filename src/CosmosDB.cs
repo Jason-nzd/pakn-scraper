@@ -143,7 +143,7 @@ namespace Scraper
                 string priceTrendText = "  Price " + (priceTrendingDown ? "Down " : "Up   ") + ":";
 
                 Log(priceTrendingDown ? ConsoleColor.Green : ConsoleColor.Red,
-                    $"{priceTrendText} {dbProduct.name.PadRight(50).Substring(0, 50)} | " +
+                    $"{priceTrendText} {dbProduct.name.PadRight(51).Substring(0, 51)} | " +
                     $"${dbProduct.currentPrice} > ${scrapedProduct.currentPrice}"
                 );
 
