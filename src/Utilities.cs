@@ -152,6 +152,10 @@ namespace Scraper
             {
                 // Do not log for existing images
             }
+            else if (responseMsg.Contains("greyscale"))
+            {
+                Console.WriteLine("Image is greyscale, skipping...");
+            }
             else
             {
                 // Log any other errors that may have occurred
