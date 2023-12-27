@@ -154,7 +154,7 @@ namespace Scraper
             }
             else if (responseMsg.Contains("greyscale"))
             {
-                Console.WriteLine("Image is greyscale, skipping...");
+                Log(ConsoleColor.Gray, $"  Image {product.id} is greyscale, skipping...");
             }
             else
             {
