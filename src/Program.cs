@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using Microsoft.Playwright;
 using Microsoft.Extensions.Configuration;
 using static Scraper.CosmosDB;
@@ -299,11 +299,30 @@ namespace Scraper
                 var imgDiv = await aTag!.QuerySelectorAsync("div div");
                 string? imgUrl = await imgDiv!.GetAttributeAsync("data-src-s");
 
+
                 // ID
                 var imageFilename = imgUrl!.Split("/").Last();        // get original ID from image url
                 string id = "P" + imageFilename.Split(".").First();   // prepend P to ID
 
-                // Size
+
+                // Price - get dollars and cents from 2 separate spans,
+                var dollarSpan = await productElement.QuerySelectorAsync(".fs-price-lockup__dollars");
+                string dollarString = await dollarSpan!.InnerHTMLAsync();
+
+                var centSpan = await productElement.QuerySelectorAsync(".fs-price-lockup__cents");
+                string centString = await centSpan!.InnerHTMLAsync();
+
+                // Then combine dollar and cent strings, and parse into a float
+                float currentPrice = float.Parse(dollarString + "." + centString);
+
+                // If multi-item and single-item prices are shown, override with the single-item price
+                var singleItemSpan = await productElement.QuerySelectorAsync(".fs-product-card__single-price");
+                if (singleItemSpan != null)
+                {
+                    string singleItemInnerText = await singleItemSpan.InnerTextAsync();
+                    currentPrice = float.Parse(singleItemInnerText.Replace("Single Price $", ""));
+                }
+
                 var pTag = await aTag.QuerySelectorAsync("p");
                 string size = await pTag!.InnerHTMLAsync();
                 size = size.Replace("l", "L");  // capitalize L for litres
