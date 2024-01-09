@@ -1,8 +1,9 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using Microsoft.Playwright;
 using Microsoft.Extensions.Configuration;
 using static Scraper.CosmosDB;
 using static Scraper.Utilities;
+using System.Text.RegularExpressions;
 
 // Pak Scraper
 // Scrapes product info and pricing from Pak n Save NZ's website.
@@ -186,7 +187,7 @@ namespace Scraper
                             Console.WriteLine(
                                 scrapedProduct!.id.PadLeft(9) + " | " +
                                 scrapedProduct.name!.PadRight(60).Substring(0, 60) + " | " +
-                                scrapedProduct.size!.PadRight(8) + " | $" +
+                                scrapedProduct.size!.PadRight(10) + " | $" +
                                 scrapedProduct.currentPrice.ToString().PadLeft(5) + " | " +
                                 unitString
                             );
@@ -291,9 +292,10 @@ namespace Scraper
         {
             try
             {
-                // Name
+                // Name - the first <a> tag of each element always contains the product name
                 var aTag = await productElement.QuerySelectorAsync("a");
                 string? name = await aTag!.GetAttributeAsync("aria-label");
+
 
                 // Image Url
                 var imgDiv = await aTag!.QuerySelectorAsync("div div");
@@ -323,11 +325,54 @@ namespace Scraper
                     currentPrice = float.Parse(singleItemInnerText.Replace("Single Price $", ""));
                 }
 
+
+                // Size - the first <p> tag of each element always contains the product size
                 var pTag = await aTag.QuerySelectorAsync("p");
                 string size = await pTag!.InnerHTMLAsync();
                 size = size.Replace("l", "L");  // capitalize L for litres
-                if (size == "ea") size = "Each";
                 if (size == "kg") size = "per kg";
+
+                // If product size is listed as 'ea' or 'pk' and a unit price is listed,
+                // try to derive the full product size from the unit price
+                var unitPriceDiv = await productElement.QuerySelectorAsync(".fs-product-card__price-per-unit");
+                if (Regex.IsMatch(size, @"\d?(ea|pk)\b") && unitPriceDiv != null)
+                {
+                    // unitPriceFullString contains the full unit price format: $2.40/100g
+                    string unitPriceFullString = await unitPriceDiv.InnerTextAsync();
+
+                    // unitPrice contains just the price, such as 2.40
+                    float unitPricing = float.Parse(unitPriceFullString.Split("/")[0].Replace("$", ""));
+
+                    // unitPriceQuantity contains just the unit quantity, such as 100
+                    string unitPriceQuantityString =
+                        Regex.Match(unitPriceFullString.Split("/")[1], @"\d+").ToString();
+
+                    // If no unit quantity digits are found, default to 1 unit
+                    if (unitPriceQuantityString == "") unitPriceQuantityString = "1";
+                    float unitPriceQuantity = float.Parse(unitPriceQuantityString);
+
+                    // unitPriceName will end up as g|kg|ml|L
+                    string unitPriceName =
+                        Regex.Match(unitPriceFullString.Split("/")[1].ToLower(), @"(g|kg|ml|l)").ToString();
+                    unitPriceName = unitPriceName.Replace("l", "L");
+
+                    // Find how many units fit within the full product price
+                    float numUnitsForFullProductSize = currentPrice / unitPricing;
+
+                    // Multiply the unit price quantity to get the full product size
+                    float fullProductSize = numUnitsForFullProductSize * unitPriceQuantity;
+
+                    // Round product size based on what unit is used, then set final product size
+                    if (unitPriceName == "g" || unitPriceName == "ml")
+                    {
+                        size = Math.Round(fullProductSize) + unitPriceName;
+                    }
+                    else if (unitPriceName == "kg" || unitPriceName == "L")
+                    {
+                        size = Math.Round(fullProductSize, 2) + unitPriceName;
+                    }
+                }
+
 
                 // Check for manual product data overrides
                 SizeAndCategoryOverride overrides = CheckProductOverrides(id);
@@ -336,14 +381,6 @@ namespace Scraper
 
                 // Source website
                 string sourceSite = "paknsave.co.nz";
-
-                // Price
-                var dollarSpan = await productElement.QuerySelectorAsync(".fs-price-lockup__dollars");
-                string dollarString = await dollarSpan!.InnerHTMLAsync();
-
-                var centSpan = await productElement.QuerySelectorAsync(".fs-price-lockup__cents");
-                string centString = await centSpan!.InnerHTMLAsync();
-                float currentPrice = float.Parse(dollarString + "." + centString);
 
                 // Create a DateTime object for the current time, but set minutes and seconds to zero
                 DateTime todaysDate = DateTime.UtcNow;
@@ -391,8 +428,7 @@ namespace Scraper
                 );
 
                 // Validate then return completed product
-                if (IsValidProduct(product))
-                    return (product);
+                if (IsValidProduct(product)) return product;
                 else throw new Exception(product.name);
             }
             catch (Exception e)
