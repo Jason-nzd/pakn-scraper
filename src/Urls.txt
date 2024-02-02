@@ -35,7 +35,7 @@ https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/deli-salads--coo
 https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/deli-salads--cooked-meats/deli-meats?pg=1 categories=salami
 https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/deli-salads--cooked-meats/deli-salads?pg=1 categories=salads-coleslaw
 https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/deli-salads--cooked-meats/dips-pesto--pate?pg=1
-https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/deli-salads--cooked-meats/ham--pork?pg=1 categories=pork
+https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/deli-salads--cooked-meats/ham--pork?pg=1 categories=ham
 https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/deli-salads--cooked-meats/precooked-chicken--poultry?pg=1 categories=chicken
 
 https://www.paknsave.co.nz/shop/Search?s=popularity&sd=0&f=tags%3DFresh%2520Seafood%257CFresh%2520Smoked%2520Fish&q=salmon categories=salmon
@@ -52,7 +52,7 @@ https://www.paknsave.co.nz/shop/category/chilled-frozen-and-desserts/desserts/ic
 https://www.paknsave.co.nz/shop/category/chilled-frozen-and-desserts/desserts/frozen-bavarians--cheesecake?pg=1 categories=pastries-cheesecake
 https://www.paknsave.co.nz/shop/category/chilled-frozen-and-desserts/desserts/ice-blocks--ice-pops?pg=1 categories=ice-blocks
 https://www.paknsave.co.nz/shop/category/chilled-frozen-and-desserts/frozen-foods/frozen-fries--potatoes?pg=1 categories=frozen-chips
-https://www.paknsave.co.nz/shop/category/chilled-frozen-and-desserts/frozen-foods/frozen-beef-lamb--pork?pg=1 categories=beef-lamb
+https://www.paknsave.co.nz/shop/category/chilled-frozen-and-desserts/frozen-foods/frozen-beef-lamb--pork?pg=1 categories=patties-meatballs
 https://www.paknsave.co.nz/shop/category/chilled-frozen-and-desserts/frozen-foods/frozen-chicken--poultry?pg=1 categories=chicken
 https://www.paknsave.co.nz/shop/category/chilled-frozen-and-desserts/frozen-foods/frozen-pizza--bases?pg=1 categories=pizza
 https://www.paknsave.co.nz/shop/category/chilled-frozen-and-desserts/frozen-foods/frozen-vegetables?pg=1
