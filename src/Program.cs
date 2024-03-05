@@ -282,8 +282,11 @@ namespace Scraper
             return imgUrl = imgUrl!.Replace("200x200", "master"); ;
         }
 
+        // ScrapeProductElementToRecord()
+        // ------------------------------
         // Takes a playwright element "div.fs-product-card", scrapes each of the desired data fields,
-        //  and then returns a completed Product record
+        // and then returns a completed Product record
+
         private async static Task<Product?> ScrapeProductElementToRecord(
             IElementHandle productElement,
             string sourceUrl,
@@ -296,16 +299,13 @@ namespace Scraper
                 var aTag = await productElement.QuerySelectorAsync("a");
                 string? name = await aTag!.GetAttributeAsync("aria-label");
 
-
                 // Image Url
                 var imgDiv = await aTag!.QuerySelectorAsync("div div");
                 string? imgUrl = await imgDiv!.GetAttributeAsync("data-src-s");
 
-
                 // ID
                 var imageFilename = imgUrl!.Split("/").Last();        // get original ID from image url
                 string id = "P" + imageFilename.Split(".").First();   // prepend P to ID
-
 
                 // Price - get dollars and cents from 2 separate spans,
                 var dollarSpan = await productElement.QuerySelectorAsync(".fs-price-lockup__dollars");
@@ -324,7 +324,6 @@ namespace Scraper
                     string singleItemInnerText = await singleItemSpan.InnerTextAsync();
                     currentPrice = float.Parse(singleItemInnerText.Replace("Single Price $", ""));
                 }
-
 
                 // Size - the first <p> tag of each element always contains the product size
                 var pTag = await aTag.QuerySelectorAsync("p");
@@ -373,9 +372,14 @@ namespace Scraper
                     }
                 }
 
-
-                // Check for manual product data overrides
+                // Check for manual product data overrides based on product ID
                 SizeAndCategoryOverride overrides = CheckProductOverrides(id);
+
+                // If override lists the product as invalid, ignore this product
+                if (overrides.category == "invalid")
+                    throw new Exception(name + " is overridden as an invalid product.");
+
+                // If override lists a sizes or category, use these instead of the scraped values.
                 if (overrides.size != "") size = overrides.size;
                 if (overrides.category != "") categories = new string[] { overrides.category };
 
