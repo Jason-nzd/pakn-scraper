@@ -86,8 +86,10 @@ namespace Scraper
 
                 if (categorisedURL != null)
                 {
-                    // If url is valid, add per page urls to list to be scraped
+                    // If URL is valid, get the number of pages to scrape through.
                     int numPages = categorisedURL.Value.numPages;
+
+                    // Add each page as an individual URL to scrape.
                     for (int i = 1; i <= numPages; i++)
                     {
                         string newUrl = categorisedURL.Value.url.Replace("pg=1", "pg=" + i.ToString());

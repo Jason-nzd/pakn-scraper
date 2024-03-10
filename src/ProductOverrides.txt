@@ -1,6 +1,5 @@
-# If a product details cannot be scraped or are simply wrong, they can be overridden here.
-# Place product IDs spaced next to product size and/or category=new-category-name.
-# Use one product override per line.
+# If a product size cannot be scraped or is misplaced in the wrong category, these values can be manually overridden here.
+# Place product IDs spaced next to product size and/or category=new-category-name, one product per line.
 
 P5019270 1020g
 P5026036 1020g
