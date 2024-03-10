@@ -96,7 +96,7 @@ namespace Scraper
             string cleanURL = url;
 
             // If url contains 'search?', keep all query parameters
-            if (url.ToLower().Contains("search?"))
+            if (url.ToLower().Contains("search?") || url.ToLower().Contains("q="))
             {
                 return url;
             }
@@ -346,16 +346,16 @@ namespace Scraper
                     // Then loop through any additional sections
                     for (int i = 1; i < splitLine.Length; i++)
                     {
-                        // If any section matches weight/size/volume symbols, use as size override
+                        // If any section matches weight/size/volume symbols, use this size override
                         if (Regex.IsMatch(splitLine[i].ToLower(), @"\d+(g|kg|ml|l)"))
                         {
                             sizeOverrideFound = splitLine[i];
                         }
 
                         // Override any categories if found
-                        if (splitLine[i].Contains("categories="))
+                        if (splitLine[i].Contains("category="))
                         {
-                            categoryOverrideFound = splitLine[i].Replace("categories=", "");
+                            categoryOverrideFound = splitLine[i].Replace("category=", "");
                         }
                     }
                 }
