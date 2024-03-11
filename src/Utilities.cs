@@ -43,11 +43,23 @@ namespace Scraper
             string urlShouldContain = ".co.nz",
             string replaceQueryParamsWith = "")
         {
+
+            // If line is a comment or empty, return null and skip this
+            if (textLine.StartsWith("#") || textLine.StartsWith("//") || textLine.Length < 4)
+            {
+                return null;
+            }
+
             // Get url from the first section
             string url = textLine.Split(' ').First();
 
-            // If url doesn't contain desired section, return null
-            if (!url.Contains(urlShouldContain)) return null;
+            // Ensure URL contains at least the urlShouldContain component
+            if (!url.Contains(urlShouldContain))
+            {
+                Console.WriteLine($"Invalid url: {url}");
+                Console.WriteLine($"Url should contain: {urlShouldContain}");
+                return null;
+            }
 
             // Optimise query parameters
             url = OptimiseURLQueryParameters(url, replaceQueryParamsWith);
@@ -64,21 +76,38 @@ namespace Scraper
             {
                 string param = textLineParams[i];
 
-                // If overridden categories are provided, override the derived categories
-                if (param.Contains("categories"))
+                // If overridden category is provided, override the scraped category
+                if (param.Contains("category="))
                 {
-                    categories = param.Replace("categories=", "").Split(",");
+                    categories = new string[] { param.Replace("category=", "") };
                 }
 
                 // Set numPages if specified
-                if (param.Contains("pages"))
+                if (param.Contains("pages="))
                 {
-                    int parsedNumPages = int.Parse(param.Replace("pages=", ""));
+                    int parsedNumPages = 1;
 
-                    // Ensure numPages is within reasonable range
-                    if (parsedNumPages >= 1 && parsedNumPages <= 20)
+                    try
                     {
+                        // Try parse pages as an integer
+                        parsedNumPages = int.Parse(param.Replace("pages=", ""));
+
+                        // Ensure parsed numPages is within reasonable range
+                        if (parsedNumPages <= 1 && parsedNumPages >= 20)
+                        {
+                            throw new Exception();
+                        }
+
+                        // Set the now validated numPages
                         numPages = parsedNumPages;
+                    }
+
+                    // If any exceptions occur, log message and return null.
+                    // Returning null allows this line to be skipped.
+                    catch (Exception)
+                    {
+                        Console.WriteLine("Invalid number of pages: " + parsedNumPages);
+                        return null;
                     }
                 }
             }
