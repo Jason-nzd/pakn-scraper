@@ -12,6 +12,10 @@ namespace Scraper
         public static Database? database;
         public static Container? cosmosContainer;
 
+        // EstablishConnection()
+        // ---------------------
+        // Establishes a connection using settings defined in appsettings.json.
+
         public static async Task<bool> EstablishConnection(string db, string partitionKey, string container)
         {
             try
@@ -62,7 +66,10 @@ namespace Scraper
             }
         }
 
-        // Takes a scraped Product, and tries to insert it or update it on CosmosDB
+        // UpsertProduct()
+        // ---------------
+        // Takes a scraped Product, and tries to insert it or update it on CosmosDB.
+
         public async static Task<UpsertResponse> UpsertProduct(Product scrapedProduct)
         {
             try
@@ -95,7 +102,7 @@ namespace Scraper
             catch (CosmosException e)
             {
                 if (e.StatusCode == System.Net.HttpStatusCode.NotFound)
-                    return (await InsertNewProduct(scrapedProduct));
+                    return await InsertNewProduct(scrapedProduct);
             }
             catch (Exception e)
             {
@@ -106,7 +113,10 @@ namespace Scraper
             return UpsertResponse.Failed;
         }
 
-        // Builds a new product with new data from scrapedProduct, and price history data from dbProduct
+        // BuildUpdatedProduct()
+        // --------------------
+        // Builds a product with combined data from scrapedProduct, and price history data from dbProduct.
+
         public static ProductResponse BuildUpdatedProduct(Product dbProduct, Product scrapedProduct)
         {
             // Measure the price difference between the new scraped product and the old db product
@@ -222,7 +232,10 @@ namespace Scraper
             }
         }
 
+        // InsertNewProduct()
+        // ------------------
         // Inserts a new Product into CosmosDB
+
         private static async Task<UpsertResponse> InsertNewProduct(Product scrapedProduct)
         {
             try
@@ -231,9 +244,9 @@ namespace Scraper
                 await cosmosContainer!.UpsertItemAsync(scrapedProduct, new PartitionKey(scrapedProduct.name));
 
                 Console.WriteLine(
-                    $"  New Product: {scrapedProduct.id.PadRight(8)} | " +
+                    $"  New Product: {scrapedProduct.id,-8} | " +
                     $"{scrapedProduct.name!.PadRight(40).Substring(0, 40)}" +
-                    $" | $ {scrapedProduct.currentPrice.ToString().PadLeft(5)} | {scrapedProduct.category.Last()}"
+                    $" | $ {scrapedProduct.currentPrice,5} | {scrapedProduct.category.Last()}"
                 );
 
                 return UpsertResponse.NewProduct;
@@ -244,6 +257,10 @@ namespace Scraper
                 return UpsertResponse.Failed;
             }
         }
+
+        // CustomQuery()
+        // -------------
+        // Is used for debugging using full SQL queries
 
         public static async Task CustomQuery()
         {
