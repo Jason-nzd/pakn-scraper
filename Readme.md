@@ -47,7 +47,7 @@ The closest store location to the co-ordinates will be selected when running the
 }
 ```
 
-## Usage
+## Command-Line Usage
 
 To dry run the scraper, logging each product to the console:
 
