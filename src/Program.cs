@@ -63,17 +63,18 @@ namespace Scraper
                         container: "products"
                     )) return;
                 }
-                else
+
+                // dotnet run db custom-query - will run a pre-defined sql query
+                if (arg.Contains("custom-query"))
                 {
-                    // dotnet run = will scrape and display results in console
-                    Log(ConsoleColor.Yellow, $"\n(Dry Run mode on)");
+                    await CustomQuery();
+                    return;
                 }
 
+                // dotnet run db images - will scrape, then upload both data and images
                 if (arg.Contains("images"))
                 {
-                    // dotnet run db images = will scrape, then upload both data and images
                     uploadImages = true;
-                    Log(ConsoleColor.Yellow, $"\n(Uploading Images mode on)");
                 }
 
                 if (arg.Contains("headed"))
@@ -85,6 +86,11 @@ namespace Scraper
                 {
                     useHeadlessBrowser = true;
                 }
+            }
+            if (!uploadToDatabase)
+            {
+                // dotnet run - will scrape and display results in console
+                LogWarn("(Dry Run Mode)");
             }
 
             // Start Stopwatch for logging purposes
@@ -100,14 +106,19 @@ namespace Scraper
 
             // Parse and optimise each line into valid urls to be scraped
             List<CategorisedURL> categorisedUrls =
-                ParseTextLinesIntoCategorisedURLs(lines, "paknsave.co.nz", "pg=1");
+                ParseTextLinesIntoCategorisedURLs(
+                    lines,
+                    urlShouldContain: "paknsave.co.nz",
+                    replaceQueryParamsWith: "",
+                    queryOptionForEachPage: "pg=",
+                    incrementEachPageBy: 1
+                );
 
             // Log how many pages will be scraped
-            Log(ConsoleColor.Yellow,
+            LogWarn(
                 $"{categorisedUrls.Count} pages to be scraped, " +
                 $"with {secondsDelayBetweenPageScrapes}s delay between each page scrape."
             );
-
             // Open an initial page and allow geolocation set the desired store location
             await OpenInitialPageAndSetLocation();
 
@@ -120,8 +131,9 @@ namespace Scraper
                     string url = categorisedUrls[i].url;
 
                     // Log current sequence of page scrapes, the total num of pages to scrape
-                    Log(ConsoleColor.Yellow,
-                        $"\nLoading Page [{i + 1}/{categorisedUrls.Count()}] {url.PadRight(112).Substring(12, 100)}");
+                    LogWarn(
+                        $"\nLoading Page [{i + 1}/{categorisedUrls.Count()}] {url.PadRight(112).Substring(12, 100)}"
+                    );
 
                     // Try load page and wait for full content to dynamically load in
                     await playwrightPage!.GotoAsync(url);
@@ -129,10 +141,11 @@ namespace Scraper
 
                     // Query all product card entries, and log how many were found
                     var productElements = await playwrightPage.QuerySelectorAllAsync("div.fs-product-card");
-                    Log(ConsoleColor.Yellow,
+                    Log(
                         $"{productElements.Count} Products Found \t" +
                         $"Total Time Elapsed: {stopwatch.Elapsed.Minutes}:{stopwatch.Elapsed.Seconds.ToString().PadLeft(2, '0')}\t" +
-                        $"Categories: {categorisedUrls[i].category}");
+                        $"Category: {categorisedUrls[i].category}"
+                    );
 
                     // Create per-page counters for logging purposes
                     int newCount = 0, priceUpdatedCount = 0, nonPriceUpdatedCount = 0, upToDateCount = 0;
@@ -204,14 +217,16 @@ namespace Scraper
                     if (uploadToDatabase)
                     {
                         // Log consolidated CosmosDB stats for entire page scrape
-                        Log(ConsoleColor.Cyan, $"{"CosmosDB:"} {newCount} new products, " +
-                        $"{priceUpdatedCount} prices updated, {nonPriceUpdatedCount} info updated, " +
-                        $"{upToDateCount} already up-to-date");
+                        LogWarn(
+                            $"{"CosmosDB:"} {newCount} new products, " +
+                            $"{priceUpdatedCount} prices updated, {nonPriceUpdatedCount} info updated, " +
+                            $"{upToDateCount} already up-to-date"
+                        );
                     }
                 }
                 catch (TimeoutException)
                 {
-                    Log(ConsoleColor.Red, "Unable to Load Web Page - timed out after 30 seconds");
+                    LogError("Unable to Load Web Page - timed out after 30 seconds");
                 }
                 catch (PlaywrightException e)
                 {
@@ -233,7 +248,7 @@ namespace Scraper
             // Try clean up playwright browser and other resources, then end program
             try
             {
-                Log(ConsoleColor.White, "Scraping Completed \n");
+                Log("Scraping Completed \n");
                 await playwrightPage!.Context.CloseAsync();
                 await playwrightPage.CloseAsync();
                 await browser!.CloseAsync();
@@ -264,8 +279,7 @@ namespace Scraper
             }
             catch (PlaywrightException)
             {
-                Log(
-                    ConsoleColor.Red,
+                LogError(
                     "Browser must be manually installed using: \n" +
                     "pwsh bin/Debug/net6.0/playwright.ps1 install\n"
                 );
@@ -312,9 +326,11 @@ namespace Scraper
                 name = await aTag!.GetAttributeAsync("aria-label");
 #pragma warning restore CS8600
             }
-            catch
+            catch (Exception e)
             {
-                throw new Exception("Couldn't scrape name from a tag");
+                LogError("Couldn't scrape name from h3 tag\n" + e.GetType());
+                // Return null if any exceptions occurred during scraping
+                return null;
             }
 
             // Image URL & Product ID
@@ -329,16 +345,16 @@ namespace Scraper
                 var imageFilename = imgUrl!.Split("/").Last();      // get original ID from image url
                 id = "P" + imageFilename.Split(".").First();        // prepend P to ID
             }
-            catch
+            catch (Exception e)
             {
-                throw new Exception("Couldn't scrape image URL from .fs-product-card__product-image div");
+                LogError($"{name} - Couldn't scrape image URL\n{e.GetType()}");
+                return null;
             }
 
             // Price
             float currentPrice;
             try
             {
-
                 // Price - get dollars and cents from 2 separate spans,
                 var dollarSpan = await productElement.QuerySelectorAsync(".fs-price-lockup__dollars");
                 string dollarString = await dollarSpan!.InnerHTMLAsync();
@@ -357,9 +373,15 @@ namespace Scraper
                     currentPrice = float.Parse(singleItemInnerText.Replace("Single Price $", ""));
                 }
             }
-            catch
+            catch (NullReferenceException)
             {
-                throw new Exception("Couldn't scrape price info");
+                // No price is listed for this product, so can ignore
+                return null;
+            }
+            catch (Exception e)
+            {
+                LogError($"{name} - Couldn't scrape price info\n{e.GetType()}");
+                return null;
             }
 
             // Size
@@ -371,11 +393,11 @@ namespace Scraper
                 size = await pTag!.InnerHTMLAsync();
                 size = size.Replace("l", "L");  // capitalize L for litres
                 if (size == "kg") size = "per kg";
-
             }
-            catch
+            catch (Exception e)
             {
-                throw new Exception("Couldn't scrape size");
+                LogError($"{name} - Couldn't scrape size\n{e.GetType()}");
+                return null;
             }
 
             // Unit Price
@@ -422,9 +444,10 @@ namespace Scraper
                     }
                 }
             }
-            catch
+            catch (Exception e)
             {
-                throw new Exception("Couldn't derive unit price");
+                LogError($"{name} - Couldn't derive unit price\n{e.GetType()}");
+                return null;
             }
 
             try
@@ -494,7 +517,7 @@ namespace Scraper
             }
             catch (Exception e)
             {
-                Log(ConsoleColor.Red, $"Price scrape error: " + e.Message);
+                LogError($"{name} - Price scrape error: \n{e.GetType()}");
                 // Return null if any exceptions occurred during scraping
                 return null;
             }
@@ -516,12 +539,12 @@ namespace Scraper
                 Thread.Sleep(4000);
                 await playwrightPage.WaitForSelectorAsync("span.fs-price-lockup__cents");
 
-                Log(ConsoleColor.Yellow, $"Selected Store: {await GetStoreLocationName()}");
+                LogWarn($"Selected Store: {await GetStoreLocationName()}");
                 return;
             }
             catch (Exception e)
             {
-                Log(ConsoleColor.Red, e.ToString());
+                LogError(e.ToString());
                 throw;
             }
         }
@@ -547,20 +570,20 @@ namespace Scraper
                 await playwrightPage.Context.GrantPermissionsAsync(new string[] { "geolocation" });
 
                 // Log to console
-                Log(ConsoleColor.Yellow, $"Selecting closest store using geo-location: ({latitude}, {longitude})");
+                LogWarn($"Selecting closest store using geo-location: ({latitude}, {longitude})");
             }
 
             // Return if no latitude and longitude are found
             catch (ArgumentNullException)
             {
-                Log(ConsoleColor.Yellow, "No geolocation found in appsettings.json, using default location");
+                LogWarn("No geolocation found in appsettings.json, using default location");
                 return;
             }
 
             // Return if unable to parse values or for any other exception
             catch (Exception)
             {
-                Log(ConsoleColor.Yellow,
+                LogWarn(
                     "Invalid geolocation found in appsettings.json, ensure format is:\n" +
                     "\"GEOLOCATION_LAT\": \"-41.21\"," +
                     "\"GEOLOCATION_LONG\": \"174.91\"");
@@ -580,7 +603,7 @@ namespace Scraper
             }
             catch (PlaywrightException)
             {
-                Log(ConsoleColor.Red, "Error loading playwright browser, check firewall and network settings");
+                LogError("Error loading playwright browser, check firewall and network settings");
                 throw;
             }
             catch (Exception)
@@ -616,12 +639,12 @@ namespace Scraper
 
                 if (excludeThisRequest)
                 {
-                    if (logToConsole) Log(ConsoleColor.Red, $"{req.Method} {req.ResourceType} - {trimmedUrl}");
+                    if (logToConsole) LogError($"{req.Method} {req.ResourceType} - {trimmedUrl}");
                     await route.AbortAsync();
                 }
                 else
                 {
-                    if (logToConsole) Log(ConsoleColor.White, $"{req.Method} {req.ResourceType} - {trimmedUrl}");
+                    if (logToConsole) Log($"{req.Method} {req.ResourceType} - {trimmedUrl}");
                     await route.ContinueAsync();
                 }
             });
