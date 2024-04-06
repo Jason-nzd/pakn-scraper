@@ -46,3 +46,10 @@ P5322852 categories=invalid
 P5322851 categories=invalid
 P5322850 categories=invalid
 P5322849 categories=invalid
+P5026053 500g
+P5002498 categories=nuts-bulk-mix
+P5002498 categories=nuts-bulk-mix
+P5002498 categories=nuts-bulk-mix
+P5002498 categories=nuts-bulk-mix
+P5002498 categories=nuts-bulk-mix
+P5319587 categories=chocolate
