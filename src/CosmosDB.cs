@@ -16,7 +16,11 @@ namespace Scraper
         // ---------------------
         // Establishes a connection using settings defined in appsettings.json.
 
-        public static async Task<bool> EstablishConnection(string db, string partitionKey, string container)
+        public static async Task<bool> EstablishConnection(
+            string db,
+            string partitionKey,
+            string container
+        )
         {
             try
             {
@@ -34,29 +38,34 @@ namespace Scraper
                     throughput: 400
                 );
 
-                Log(ConsoleColor.Yellow, $"\n(Connected to CosmosDB) {cosmosClient.Endpoint}");
+                Log($"\n(Connected to CosmosDB) {cosmosClient.Endpoint}", ConsoleColor.Yellow);
                 return true;
             }
             catch (CosmosException e)
             {
                 LogError(e.GetType().ToString());
-                Log(ConsoleColor.Red,
-                "Error Connecting to CosmosDB - check appsettings.json, endpoint or key may be expired");
+                LogError(
+                    "Error Connecting to CosmosDB - check appsettings.json, " +
+                    "endpoint or key may be expired"
+                );
                 return false;
             }
             catch (HttpRequestException e)
             {
                 LogError(e.GetType().ToString());
-                Log(ConsoleColor.Red,
-                "Error Connecting to CosmosDB - check firewall and internet status");
+                LogError(
+                    "Error Connecting to CosmosDB - check firewall and internet status"
+                );
                 return false;
             }
             catch (Exception e)
             {
                 LogError(e.GetType().ToString());
-                Log(ConsoleColor.Red,
-                "Error Connecting to CosmosDB - make sure appsettings.json is created and contains:");
-                Log(ConsoleColor.White,
+                LogError(
+                    "Error Connecting to CosmosDB - make sure appsettings.json " +
+                    "is created and contains:"
+                );
+                Log(
                     "{\n" +
                     "\t\"COSMOS_ENDPOINT\": \"<your cosmosdb endpoint uri>\",\n" +
                     "\t\"COSMOS_KEY\": \"<your cosmosdb primary key>\"\n" +
@@ -108,7 +117,7 @@ namespace Scraper
             catch (Exception e)
             {
                 LogError(e.GetType().ToString());
-                Console.Write(e.ToString());
+                Log(e.ToString());
             }
 
             // Return failed if this part is ever reached
@@ -165,9 +174,10 @@ namespace Scraper
                 bool priceTrendingDown = scrapedProduct.currentPrice < dbProduct!.currentPrice;
                 string priceTrendText = "  Price " + (priceTrendingDown ? "Down " : "Up   ") + ":";
 
-                Log(priceTrendingDown ? ConsoleColor.Green : ConsoleColor.Red,
+                Log(
                     $"{priceTrendText} {dbProduct.name.PadRight(51).Substring(0, 51)} | " +
-                    $"${dbProduct.currentPrice} > ${scrapedProduct.currentPrice}"
+                    $"${dbProduct.currentPrice} > ${scrapedProduct.currentPrice}",
+                    priceTrendingDown ? ConsoleColor.Green : ConsoleColor.Red
                 );
 
                 // Return new product with updated data
@@ -256,7 +266,7 @@ namespace Scraper
                 // No existing product was found, upload to CosmosDB
                 await cosmosContainer!.UpsertItemAsync(scrapedProduct, new PartitionKey(scrapedProduct.name));
 
-                Console.WriteLine(
+                Log(
                     $"  New Product: {scrapedProduct.id,-8} | " +
                     $"{scrapedProduct.name!.PadRight(40).Substring(0, 40)}" +
                     $" | $ {scrapedProduct.currentPrice,5} | {scrapedProduct.size}"
@@ -266,7 +276,7 @@ namespace Scraper
             }
             catch (CosmosException e)
             {
-                Console.WriteLine($"  CosmosDB: Upsert Error for new Product: {e.StatusCode}");
+                Log($"  CosmosDB: Upsert Error for new Product: {e.StatusCode}");
                 return UpsertResponse.Failed;
             }
         }
@@ -278,14 +288,14 @@ namespace Scraper
         public static async Task CustomQuery()
         {
             var feedIterator = cosmosContainer!.GetItemQueryIterator<Product>(
-                "select * from products p where contains(p.id, 'M')"
+                "select * from products p where contains(p.sourceSite, 'newworld')"
             );
 
             while (feedIterator.HasMoreResults)
             {
                 foreach (var item in await feedIterator.ReadNextAsync())
                 {
-                    Console.WriteLine($"  Deleting {item.id} - {item.name}");
+                    Log($"  Deleting {item.id} - {item.name}");
                     await cosmosContainer.DeleteItemAsync<Product>(item.id, new PartitionKey(item.name));
                 }
             }
