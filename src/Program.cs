@@ -6,6 +6,7 @@ using static Scraper.Utilities;
 using System.Text.RegularExpressions;
 
 // Pak Scraper
+// -----------
 // Scrapes product info and pricing from Pak n Save NZ's website.
 
 namespace Scraper
@@ -13,7 +14,9 @@ namespace Scraper
     public class Program
     {
         static int secondsDelayBetweenPageScrapes = 11;
-        static bool onlyUploadImagesForNewProducts = false;
+        static bool uploadToDatabase = false;
+        static bool uploadImages = false;
+        static bool useHeadlessBrowser = false;
 
         public record Product(
             string id,
@@ -45,70 +48,68 @@ namespace Scraper
 
         public static async Task Main(string[] args)
         {
-            // Handle arguments - 'dotnet run dry' will run in dry mode, bypassing CosmosDB
-            //  'dotnet run reverse' will reverse the order that each page is loaded
-            if (args.Length > 0)
+            // Handle command-line arguments 'db', 'images', 'headed'
+            foreach (string arg in args)
             {
-                if (args.Contains("dry")) dryRunMode = true;
-                if (args.Contains("reverse")) reverseMode = true;
-                Log(ConsoleColor.Yellow, $"\n(Dry Run mode on)");
-            }
+                if (arg.Contains("db"))
+                {
+                    // dotnet run db = will scrape and upload data to a database
+                    uploadToDatabase = true;
 
-            // Establish Playwright browser
-            Stopwatch stopwatch = new Stopwatch();
-            stopwatch.Start();
-            await EstablishPlaywright();
-
-            // Connect to CosmosDB - end program if unable to connect
-            if (!dryRunMode)
-            {
-                if (!await CosmosDB.EstablishConnection(
+                    // Connect to CosmosDB - end program if unable to connect
+                    if (!await CosmosDB.EstablishConnection(
                         db: "supermarket-prices",
                         partitionKey: "/name",
                         container: "products"
                     )) return;
+                }
+                else
+                {
+                    // dotnet run = will scrape and display results in console
+                    Log(ConsoleColor.Yellow, $"\n(Dry Run mode on)");
+                }
+
+                if (arg.Contains("images"))
+                {
+                    // dotnet run db images = will scrape, then upload both data and images
+                    uploadImages = true;
+                    Log(ConsoleColor.Yellow, $"\n(Uploading Images mode on)");
+                }
+
+                if (arg.Contains("headed"))
+                {
+                    useHeadlessBrowser = false;
+                }
+
+                if (arg.Contains("headless"))
+                {
+                    useHeadlessBrowser = true;
+                }
             }
 
-            // Read lines from text file - end program if unable to read
+            // Start Stopwatch for logging purposes
+            Stopwatch stopwatch = new Stopwatch();
+            stopwatch.Start();
+
+            // Establish Playwright browser
+            await EstablishPlaywright(useHeadlessBrowser);
+
+            // Read lines from Urls.txt file - end program if unable to read
             List<string>? lines = ReadLinesFromFile("Urls.txt");
             if (lines == null) return;
 
             // Parse and optimise each line into valid urls to be scraped
-            List<CategorisedURL> categorisedUrls = new List<CategorisedURL>();
-            foreach (string line in lines)
-            {
-                CategorisedURL? categorisedURL =
-                    ParseLineToCategorisedURL(
-                        line,
-                        urlShouldContain: "paknsave.co.nz",
-                        replaceQueryParamsWith: "pg=1"
-                    );
+            List<CategorisedURL> categorisedUrls =
+                ParseTextLinesIntoCategorisedURLs(lines, "paknsave.co.nz", "pg=1");
 
-                if (categorisedURL != null)
-                {
-                    // If URL is valid, get the number of pages to scrape through.
-                    int numPages = categorisedURL.Value.numPages;
-
-                    // Add each page as an individual URL to scrape.
-                    for (int i = 1; i <= numPages; i++)
-                    {
-                        string newUrl = categorisedURL.Value.url.Replace("pg=1", "pg=" + i.ToString());
-                        CategorisedURL perPageUrl = new CategorisedURL(newUrl, categorisedURL.Value.categories, -1);
-                        categorisedUrls.Add(perPageUrl);
-                    }
-                }
-            }
-
+            // Log how many pages will be scraped
             Log(ConsoleColor.Yellow,
                 $"{categorisedUrls.Count} pages to be scraped, " +
                 $"with {secondsDelayBetweenPageScrapes}s delay between each page scrape."
             );
 
-            // Optionally reverse the order of urls
-            if (reverseMode) categorisedUrls.Reverse();
-
-            // Open a page and allow the geolocation detection system to set the desired location
-            await OpenPageAndSetLocation();
+            // Open an initial page and allow geolocation set the desired store location
+            await OpenInitialPageAndSetLocation();
 
             // Open up each URL and run the scraping function
             for (int i = 0; i < categorisedUrls.Count(); i++)
@@ -131,7 +132,7 @@ namespace Scraper
                     Log(ConsoleColor.Yellow,
                         $"{productElements.Count} Products Found \t" +
                         $"Total Time Elapsed: {stopwatch.Elapsed.Minutes}:{stopwatch.Elapsed.Seconds.ToString().PadLeft(2, '0')}\t" +
-                        $"Categories: {String.Join(", ", categorisedUrls[i].categories)}");
+                        $"Categories: {categorisedUrls[i].category}");
 
                     // Create per-page counters for logging purposes
                     int newCount = 0, priceUpdatedCount = 0, nonPriceUpdatedCount = 0, upToDateCount = 0;
@@ -144,10 +145,10 @@ namespace Scraper
                             await ScrapeProductElementToRecord(
                                 productElement,
                                 url,
-                                categorisedUrls[i].categories
+                                new string[] { categorisedUrls[i].category }
                             );
 
-                        if (!dryRunMode && scrapedProduct != null)
+                        if (uploadToDatabase && scrapedProduct != null)
                         {
                             // Try upsert to CosmosDB
                             UpsertResponse response = await CosmosDB.UpsertProduct(scrapedProduct);
@@ -172,15 +173,19 @@ namespace Scraper
                                     break;
                             }
 
-                            if (!onlyUploadImagesForNewProducts || response == UpsertResponse.NewProduct)
+                            if (uploadImages)
                             {
-                                // Use Azure Function to upload product image
+                                // Get hi-res image url
                                 string hiResImageUrl = await GetHiresImageUrl(productElement);
+
+                                // Use a REST API to upload product image
                                 if (hiResImageUrl != "" && hiResImageUrl != null)
+                                {
                                     await UploadImageUsingRestAPI(hiResImageUrl, scrapedProduct);
+                                }
                             }
                         }
-                        else if (dryRunMode && scrapedProduct != null)
+                        else if (!uploadToDatabase && scrapedProduct != null)
                         {
                             // In Dry Run mode, print a log row for every product
                             string unitString = scrapedProduct.unitPrice != null ?
@@ -196,7 +201,7 @@ namespace Scraper
                         }
                     }
 
-                    if (!dryRunMode)
+                    if (uploadToDatabase)
                     {
                         // Log consolidated CosmosDB stats for entire page scrape
                         Log(ConsoleColor.Cyan, $"{"CosmosDB:"} {newCount} new products, " +
@@ -204,7 +209,7 @@ namespace Scraper
                         $"{upToDateCount} already up-to-date");
                     }
                 }
-                catch (System.TimeoutException)
+                catch (TimeoutException)
                 {
                     Log(ConsoleColor.Red, "Unable to Load Web Page - timed out after 30 seconds");
                 }
@@ -212,7 +217,7 @@ namespace Scraper
                 {
                     LogError("Unable to Load Web Page - " + e.Message);
                 }
-                catch (System.Exception e)
+                catch (Exception e)
                 {
                     Console.Write(e.ToString());
                     return;
@@ -233,22 +238,21 @@ namespace Scraper
                 await playwrightPage.CloseAsync();
                 await browser!.CloseAsync();
             }
-            catch (System.Exception)
+            catch (Exception)
             {
             }
             return;
         }
 
-        public async static Task EstablishPlaywright()
+        public async static Task EstablishPlaywright(bool headless)
         {
             try
             {
                 // Launch Playwright Browser - Headless mode doesn't work with the anti-bot mechanisms,
                 //  so a regular browser window is launched
                 playwright = await Playwright.CreateAsync();
-
                 browser = await playwright.Chromium.LaunchAsync(
-                    new BrowserTypeLaunchOptions { Headless = false }
+                    new BrowserTypeLaunchOptions { Headless = headless }
                 );
 
                 // Launch Page 
@@ -258,7 +262,7 @@ namespace Scraper
                 await RoutePlaywrightExclusions();
                 return;
             }
-            catch (Microsoft.Playwright.PlaywrightException)
+            catch (PlaywrightException)
             {
                 Log(
                     ConsoleColor.Red,
@@ -281,7 +285,9 @@ namespace Scraper
             if (!imgUrl!.Contains("200x200")) return "";
 
             // Swap url params to get hi-res version
-            return imgUrl = imgUrl!.Replace("200x200", "master"); ;
+            imgUrl = imgUrl!.Replace("200x200", "master");
+
+            return imgUrl;
         }
 
         // ScrapeProductElementToRecord()
@@ -292,22 +298,46 @@ namespace Scraper
         private async static Task<Product?> ScrapeProductElementToRecord(
             IElementHandle productElement,
             string sourceUrl,
-            string[] categories
+            string[] category
         )
         {
+            // Product Name
+            string name;
             try
             {
-                // Name - the first <a> tag of each element always contains the product name
+                // Name - the first <a> tag of each element contains the product name
                 var aTag = await productElement.QuerySelectorAsync("a");
-                string? name = await aTag!.GetAttributeAsync("aria-label");
 
+#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
+                name = await aTag!.GetAttributeAsync("aria-label");
+#pragma warning restore CS8600
+            }
+            catch
+            {
+                throw new Exception("Couldn't scrape name from a tag");
+            }
+
+            // Image URL & Product ID
+            string id;
+            try
+            {
                 // Image Url
-                var imgDiv = await aTag!.QuerySelectorAsync("div div");
+                var imgDiv = await productElement.QuerySelectorAsync(".fs-product-card__product-image");
                 string? imgUrl = await imgDiv!.GetAttributeAsync("data-src-s");
 
                 // ID
-                var imageFilename = imgUrl!.Split("/").Last();        // get original ID from image url
-                string id = "P" + imageFilename.Split(".").First();   // prepend P to ID
+                var imageFilename = imgUrl!.Split("/").Last();      // get original ID from image url
+                id = "P" + imageFilename.Split(".").First();        // prepend P to ID
+            }
+            catch
+            {
+                throw new Exception("Couldn't scrape image URL from .fs-product-card__product-image div");
+            }
+
+            // Price
+            float currentPrice;
+            try
+            {
 
                 // Price - get dollars and cents from 2 separate spans,
                 var dollarSpan = await productElement.QuerySelectorAsync(".fs-price-lockup__dollars");
@@ -317,7 +347,7 @@ namespace Scraper
                 string centString = await centSpan!.InnerHTMLAsync();
 
                 // Then combine dollar and cent strings, and parse into a float
-                float currentPrice = float.Parse(dollarString + "." + centString);
+                currentPrice = float.Parse(dollarString + "." + centString);
 
                 // If multi-item and single-item prices are shown, override with the single-item price
                 var singleItemSpan = await productElement.QuerySelectorAsync(".fs-product-card__single-price");
@@ -326,13 +356,31 @@ namespace Scraper
                     string singleItemInnerText = await singleItemSpan.InnerTextAsync();
                     currentPrice = float.Parse(singleItemInnerText.Replace("Single Price $", ""));
                 }
+            }
+            catch
+            {
+                throw new Exception("Couldn't scrape price info");
+            }
 
+            // Size
+            string size;
+            try
+            {
                 // Size - the first <p> tag of each element always contains the product size
-                var pTag = await aTag.QuerySelectorAsync("p");
-                string size = await pTag!.InnerHTMLAsync();
+                var pTag = await productElement.QuerySelectorAsync("p");
+                size = await pTag!.InnerHTMLAsync();
                 size = size.Replace("l", "L");  // capitalize L for litres
                 if (size == "kg") size = "per kg";
 
+            }
+            catch
+            {
+                throw new Exception("Couldn't scrape size");
+            }
+
+            // Unit Price
+            try
+            {
                 // If product size is listed as 'ea' or 'pk' and a unit price is listed,
                 // try to derive the full product size from the unit price
                 var unitPriceDiv = await productElement.QuerySelectorAsync(".fs-product-card__price-per-unit");
@@ -373,7 +421,14 @@ namespace Scraper
                         size = Math.Round(fullProductSize, 2) + unitPriceName;
                     }
                 }
+            }
+            catch
+            {
+                throw new Exception("Couldn't derive unit price");
+            }
 
+            try
+            {
                 // Check for manual product data overrides based on product ID
                 SizeAndCategoryOverride overrides = CheckProductOverrides(id);
 
@@ -383,7 +438,7 @@ namespace Scraper
 
                 // If override lists a sizes or category, use these instead of the scraped values.
                 if (overrides.size != "") size = overrides.size;
-                if (overrides.category != "") categories = new string[] { overrides.category };
+                if (overrides.category != "") category = new string[] { overrides.category };
 
                 // Source website
                 string sourceSite = "paknsave.co.nz";
@@ -423,7 +478,7 @@ namespace Scraper
                     name!,
                     size,
                     currentPrice,
-                    categories,
+                    category,
                     sourceSite,
                     priceHistory,
                     todaysDate,
@@ -445,35 +500,54 @@ namespace Scraper
             }
         }
 
-        // Get the name of the store location that is currently active
-        private static async Task<string> GetStoreLocationName()
+        // OpenInitialPageAndSetLocation()
+        // -------------------------------
+        private static async Task OpenInitialPageAndSetLocation()
         {
             try
             {
-                var storeLocElement = await playwrightPage!.QuerySelectorAsync("span.fs-selected-store__name");
-                return await storeLocElement!.InnerHTMLAsync();
+                // Set geo-location data
+                await SetGeoLocation();
+
+                // Goto any page to trigger geo-location detection
+                await playwrightPage!.GotoAsync("https://www.paknsave.co.nz/shop/deals");
+
+                // Wait for page to automatically reload with the new geo-location
+                Thread.Sleep(4000);
+                await playwrightPage.WaitForSelectorAsync("span.fs-price-lockup__cents");
+
+                Log(ConsoleColor.Yellow, $"Selected Store: {await GetStoreLocationName()}");
+                return;
             }
-            catch (Microsoft.Playwright.PlaywrightException)
+            catch (Exception e)
             {
-                Log(ConsoleColor.Red, "Error loading playwright browser, check firewall and network settings");
+                Log(ConsoleColor.Red, e.ToString());
                 throw;
-            }
-            catch (System.Exception)
-            {
-                return "Unknown";
             }
         }
 
-        // Gives permission to webpage to use geolocation to set closest store location
-        private static async Task OpenPageAndSetLocation()
+        // SetGeoLocation()
+        // ----------------
+        private static async Task SetGeoLocation()
         {
+            float latitude, longitude;
 
             // Try get latitude and longitude from appsettings.json
-            float latitude, longitude;
             try
             {
                 latitude = float.Parse(config.GetSection("GEOLOCATION_LAT").Value!);
                 longitude = float.Parse(config.GetSection("GEOLOCATION_LONG").Value!);
+
+                // Set playwright geolocation using found latitude and longitude
+                await playwrightPage!.Context.SetGeolocationAsync(
+                    new Geolocation() { Latitude = latitude, Longitude = longitude }
+                );
+
+                // Grant permission to access geo-location
+                await playwrightPage.Context.GrantPermissionsAsync(new string[] { "geolocation" });
+
+                // Log to console
+                Log(ConsoleColor.Yellow, $"Selecting closest store using geo-location: ({latitude}, {longitude})");
             }
 
             // Return if no latitude and longitude are found
@@ -492,35 +566,33 @@ namespace Scraper
                     "\"GEOLOCATION_LONG\": \"174.91\"");
                 return;
             }
+        }
 
-            // Set playwright geolocation using found latitude and longitude
-            await playwrightPage!.Context.SetGeolocationAsync(
-                new Geolocation() { Latitude = latitude, Longitude = longitude }
-            );
-            Log(ConsoleColor.Yellow, $"Selecting closest store using geo-location: ({latitude}, {longitude})");
-            await playwrightPage.Context.GrantPermissionsAsync(new string[] { "geolocation" });
-
+        // GetStoreLocationName()
+        // ----------------------
+        // Get the name of the store location that is currently active
+        private static async Task<string> GetStoreLocationName()
+        {
             try
             {
-                // Goto a page to trigger geolocation detection
-                await playwrightPage.GotoAsync("https://www.paknsave.co.nz/shop/deals");
-
-                // The server side code will detect the geolocation,
-                //  and will automatically reload with the closet store set
-                Thread.Sleep(5000);
-                await playwrightPage.WaitForSelectorAsync("span.fs-price-lockup__cents");
-
-                Log(ConsoleColor.Yellow, $"Selected Store: {await GetStoreLocationName()}");
-                return;
+                var storeLocElement = await playwrightPage!.QuerySelectorAsync("span.fs-selected-store__name");
+                return await storeLocElement!.InnerHTMLAsync();
             }
-            catch (System.Exception e)
+            catch (PlaywrightException)
             {
-                Log(ConsoleColor.Red, e.ToString());
+                Log(ConsoleColor.Red, "Error loading playwright browser, check firewall and network settings");
                 throw;
+            }
+            catch (Exception)
+            {
+                return "Unknown";
             }
         }
 
+        // RoutePlaywrightExclusions()
+        // ---------------------------
         // Excludes playwright from downloading unwanted resources such as ads, trackers, images, etc.
+
         private static async Task RoutePlaywrightExclusions(bool logToConsole = false)
         {
             // Define excluded types and urls to reject
@@ -554,7 +626,5 @@ namespace Scraper
                 }
             });
         }
-        private static bool dryRunMode = false;
-        private static bool reverseMode = false;
     }
 }

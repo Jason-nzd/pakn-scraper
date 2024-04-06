@@ -2,7 +2,7 @@
 
 Scrapes product pricing and info from the PaknSave NZ website. Product information and price snapshots can be stored on Azure CosmosDB, or this program can simply log to console. Images can be sent to an API for resizing, analysis and other processing.
 
-The scraper is powered by `Microsoft Playwright`. It requires `.NET 6 SDK` & `Powershell` to run. Azure CosmosDB is optional.
+The scraper is powered by `Microsoft Playwright`. It requires `.NET 6 SDK` & `Powershell` to run. Azure CosmosDB and image processing are optional.
 
 ## Quick Setup
 
@@ -18,10 +18,10 @@ Playwright Chromium web browser must be downloaded and installed using:
 pwsh bin/Debug/net6.0/playwright.ps1 install chromium
 ```
 
-If running in dry mode, the program is now ready to use with:
+The program is now ready to use and will scrape all URLs placed in `Urls.txt`.
 
 ```cmd
-dotnet run dry
+dotnet run
 ```
 
 ## Advanced Setup with appsettings.json
@@ -37,8 +37,8 @@ If using CosmosDB, set the CosmosDB endpoint and key using the format:
 }
 ```
 
-To override the default store with a specific location, set geolocation co-ordinates in long/lat format.
-The closest store to the co-ordinates will be selected.
+To override the default store location with a specific location, set geolocation co-ordinates in Long/Lat format. Long/Lat co-ordinates can be obtained from resources such as google maps.
+The closest store location to the co-ordinates will be selected when running the scraper.
 
 ```json
 {
@@ -52,13 +52,13 @@ The closest store to the co-ordinates will be selected.
 To dry run the scraper, logging each product to the console:
 
 ```powershell
-dotnet run dry
+dotnet run
 ```
 
 To run the scraper with both logging and storing of each product to the database:
 
 ```powershell
-dotnet run
+dotnet run db
 ```
 
 ## Sample Dry Run Output

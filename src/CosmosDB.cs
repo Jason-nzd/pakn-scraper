@@ -82,6 +82,7 @@ namespace Scraper
 
                 if (response.StatusCode == System.Net.HttpStatusCode.OK)
                 {
+
                     // Get product from CosmosDB resource
                     Product dbProduct = response.Resource;
 
@@ -106,6 +107,7 @@ namespace Scraper
             }
             catch (Exception e)
             {
+                LogError(e.GetType().ToString());
                 Console.Write(e.ToString());
             }
 
@@ -125,9 +127,20 @@ namespace Scraper
             // Check if price has changed by more than $0.05
             bool priceHasChanged = priceDifference > 0.05;
 
-            // Check if category or size has changed
-            string oldCategories = string.Join(" ", dbProduct.category);
+            // Check if DB product has category set
+            string oldCategories;
+            try
+            {
+                oldCategories = string.Join(" ", dbProduct.category);
+            }
+            catch
+            {
+                oldCategories = string.Empty;
+            }
+
             string newCategories = string.Join(" ", scrapedProduct.category);
+
+            // Check if size, categories, or other minor values have changed
             bool otherDataHasChanged =
                 dbProduct!.size != scrapedProduct.size ||
                 oldCategories != newCategories ||
@@ -138,7 +151,7 @@ namespace Scraper
                 dbProduct.originalUnitQuantity != scrapedProduct.originalUnitQuantity
             ;
 
-            // If price has changed and not on the same day, we can update it
+            // If price has changed and not on the same day, we can do a full update from the scraped product
             if (priceHasChanged &&
                 dbProduct.lastUpdated.ToShortDateString() !=
                 scrapedProduct.lastUpdated.ToShortDateString()
@@ -246,7 +259,7 @@ namespace Scraper
                 Console.WriteLine(
                     $"  New Product: {scrapedProduct.id,-8} | " +
                     $"{scrapedProduct.name!.PadRight(40).Substring(0, 40)}" +
-                    $" | $ {scrapedProduct.currentPrice,5} | {scrapedProduct.category.Last()}"
+                    $" | $ {scrapedProduct.currentPrice,5} | {scrapedProduct.size}"
                 );
 
                 return UpsertResponse.NewProduct;
