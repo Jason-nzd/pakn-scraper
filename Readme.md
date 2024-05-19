@@ -9,7 +9,8 @@ The scraper is powered by `Microsoft Playwright`. It requires `.NET 6 SDK` & `Po
 First clone or download this repo, change directory into `/src`, then restore and build .NET packages with:
 
 ```powershell
-dotnet restore && dotnet build
+dotnet restore
+dotnet build
 ```
 
 Playwright Chromium web browser must be downloaded and installed using:
@@ -24,9 +25,9 @@ The program is now ready to use and will scrape all URLs placed in `Urls.txt`.
 dotnet run
 ```
 
-## Advanced Setup with appsettings.json
+## Optional Setup with appsettings.json
 
-To set optional advanced parameters, create `appsettings.json`.
+To set optional advanced parameters, edit `appsettings.json`.
 
 If using CosmosDB, set the CosmosDB endpoint and key using the format:
 
@@ -42,8 +43,8 @@ The closest store location to the co-ordinates will be selected when running the
 
 ```json
 {
+    "GEOLOCATION_LONG": "174.91",
     "GEOLOCATION_LAT": "-41.21",
-    "GEOLOCATION_LONG": "174.91"
 }
 ```
 
@@ -64,13 +65,15 @@ dotnet run db
 ## Sample Dry Run Output
 
 ```cmd
- P1234567 | Coconut Supreme Slice                           | 350g     | $ 5.89 | $16.83 /kg
- P5345284 | Cookies Gluten Free Delicious Choc Chip Cookie  | 250g     | $ 4.89 | $19.56 /kg
- P5678287 | Cookies Gluten Free Delicious Macadamia Cookie  | 250g     | $ 4.89 | $19.56 /kg
- P3457825 | Belgium Slice                                   | Each     | $ 5.89 | 
- P5789285 | Cookies Gluten Free Delicious Double Choc Chip  | 250g     | $ 4.89 | $19.56 /kg
- P2356288 | Bakery Crunchy Bran Biscuits With Sultanas      | 230g     | $ 4.49 | $19.52 /kg
- P2765307 | Sanniu Evergreen Variant Biscuits               | 4 x 132g | $ 6.36 | $12.05 /kg
+       ID | Name                                    | Size   | Price  | Unit Price
+----------------------------------------------------------------------------------
+ P1234567 | Coconut Supreme Slice                   | 350g   | $ 5.89 | $16.83 /kg
+ P5345284 | Gluten Free Delicious Choc Chip Cookie  | 250g   | $ 4.89 | $19.56 /kg
+ P5678287 | Gluten Free Delicious Macadamia Cookie  | 250g   | $ 4.89 | $19.56 /kg
+ P3457825 | Belgium Slice                           | Each   | $ 5.89 | 
+ P5789285 | Gluten Free Delicious Double Choc Chip  | 250g   | $ 4.89 | $19.56 /kg
+ P2356288 | Bakery Crunchy Bran With Sultanas       | 230g   | $ 4.49 | $19.52 /kg
+ P2765307 | Sanniu Evergreen Variant Biscuits       | 4x132g | $ 6.36 | $12.05 /kg
 ```
 
 ## Sample Product Stored in CosmosDB

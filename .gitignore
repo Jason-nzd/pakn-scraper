@@ -7,7 +7,7 @@
 
 /TestResults
 
-/src/appsettings.json
+/src/appsettings.local.json
 
 *.bat
 *.lnk
