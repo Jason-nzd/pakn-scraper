@@ -2,11 +2,11 @@
 
 Scrapes product pricing and info from the PaknSave NZ website. Product information and price snapshots can be stored on Azure CosmosDB, or this program can simply log to console. Images can be sent to an API for resizing, analysis and other processing.
 
-The scraper is powered by `Microsoft Playwright`. It requires `.NET 6 SDK` & `Powershell` to run. Azure CosmosDB and image processing are optional.
+The scraper is powered by `Microsoft Playwright`. It requires `.NET SDK` & `Powershell` to run. Azure CosmosDB and image processing are optional.
 
 ## Quick Setup
 
-First clone or download this repo, change directory into `/src`, then restore and build .NET packages with:
+With `.NET SDK` installed, clone this repo, change directory into `/src`, then restore and build .NET packages with:
 
 ```powershell
 dotnet restore
