@@ -297,11 +297,11 @@ namespace Scraper
             var imgDiv = await aTag!.QuerySelectorAsync("div div");
             string? imgUrl = await imgDiv!.GetAttributeAsync("data-src-s");
 
-            // Check if image is a valid product image
-            if (!imgUrl!.Contains("200x200")) return "";
+            // Check if image is a valid product image, otherwise return blank
+            if (!imgUrl!.Contains("fsimg.co.nz/product/retail/fan/image/")) return "";
 
-            // Swap url params to get hi-res version
-            imgUrl = imgUrl!.Replace("200x200", "master");
+            // Swap url from 200x200 or 400x400 to master to get the hi-res version
+            imgUrl = Regex.Replace(imgUrl, @"\d00x\d00", "master");
 
             return imgUrl;
         }
