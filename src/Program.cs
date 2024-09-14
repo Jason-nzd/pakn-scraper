@@ -508,7 +508,6 @@ namespace Scraper
 
                         // If the 1 decimal point version is close enough to the more accurate 2 decimal point,
                         //  use that instead for readability.
-                        Console.WriteLine(Math.Abs(derivedSize1decimal - derivedSize2decimal));
                         if (Math.Abs(derivedSize1decimal - derivedSize2decimal) < 0.03)
                             size = derivedSize1decimal.ToString() + unitName;
                         else
