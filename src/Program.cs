@@ -410,6 +410,11 @@ namespace Scraper
                         centString = await p.InnerTextAsync();
                         break;
 
+                    // Size tag is only available on some pages
+                    case "product-subtitle":
+                        size = await p.InnerTextAsync();
+                        break;
+
                     default:
                         break;
                 }
@@ -440,48 +445,88 @@ namespace Scraper
             //         currentPrice = float.Parse(singleItemInnerText.Replace("Single Price $", ""));
             //     }
 
-            // Size
+            // Unit Price - Scrape the unit price if it is listed
+            // Examples: $1.64/1L
+            float? unitPrice = null;
+            string? unitName = "";
+            float? originalUnitQuantity = null; // deprecated - to be removed later
             try
             {
-                // Size - the first <p> tag of each element always contains the product size
-                var pTag = await productElement.QuerySelectorAsync("p");
-                size = await pTag!.InnerHTMLAsync();
-                size = size.Replace("l", "L");  // capitalize L for litres
-                if (size == "kg") size = "per kg";
+                // Loop all <p> tags starting from the bottom, where the unit price usually is
+                string unitPriceString = "";
+                for (int index = allPElements.Count - 1; index >= 0; index--)
+                {
+                    var pTag = allPElements[index];
+                    string innerText = await pTag.InnerTextAsync();
+
+                    // Find the correct <p> tag containing the unit price string using regex.
+                    // Regex match to ensure it has leading $, digits, and /
+                    if (Regex.Match(innerText, @"\$\d*.?\d*/").Success)
+                    {
+                        unitPriceString = innerText;
+                        break;
+                    }
+                }
+
+                // If a valid unit price string was found, separate it and process further
+                if (unitPriceString != "")
+                {
+                    // Get amount (Ex: 1.64) and unit (Ex: 1L)
+                    string amountString = unitPriceString.Split("/")[0].Replace("$", "");
+                    unitPrice = float.Parse(amountString);
+                    unitName = unitPriceString.Split("/")[1];
+
+                    // Standardize ml to L, such as 300ml = 0.3L
+                    if (Regex.IsMatch(unitName, @"\d*(ml|mL)"))
+                    {
+                        int mlAmount = int.Parse(unitName.ToLower().Replace("ml", ""));
+                        float multiplierToGet1L = 1000 / mlAmount;
+                        unitPrice = (float)Math.Round((decimal)(unitPrice * multiplierToGet1L), 2);
+                        unitName = "L";
+                    }
+
+                    // Standardize g to kg, such as 300g = 0.3kg
+                    if (Regex.IsMatch(unitName, @"\d+g\b"))
+                    {
+                        int gramAmount = int.Parse(unitName.ToLower().Replace("g", ""));
+                        float multiplierToGet1kg = 1000 / gramAmount;
+                        unitPrice = (float)Math.Round((decimal)(unitPrice * multiplierToGet1kg), 2);
+                        unitName = "kg";
+                    }
+
+                    // Standardize 1L and 1kg units
+                    if (unitName == "1L") unitName = "L";
+                    if (unitName == "1kg") unitName = "kg";
+
+                    // If product size is missing, derive from the unit price
+                    if (size == "")
+                    {
+                        // Calculate sizes to 2, 1, and 0 decimal points
+                        double derivedSize2decimal = Math.Round((double)(currentPrice / unitPrice), 2);
+                        double derivedSize1decimal = Math.Round((double)(currentPrice / unitPrice), 1);
+                        double derivedSize = Math.Round((double)(currentPrice / unitPrice), 0);
+
+                        // If the 1 decimal point version is close enough to the more accurate 2 decimal point,
+                        //  use that instead for readability.
+                        Console.WriteLine(Math.Abs(derivedSize1decimal - derivedSize2decimal));
+                        if (Math.Abs(derivedSize1decimal - derivedSize2decimal) < 0.03)
+                            size = derivedSize1decimal.ToString() + unitName;
+                        else
+                            size = derivedSize2decimal.ToString() + unitName;
+
+                        // Set size to pk if unit size is /ea
+                        if (unitName == "ea" || unitName == "each")
+                        {
+                            size = Math.Round(derivedSize, 0).ToString() + "pk";
+                        }
+                    }
+                }
             }
             catch (Exception e)
             {
-                LogError($"{name} - Couldn't scrape size\n{e.GetType()}");
+                LogError($"{name} - Couldn't process unit price\n{e.GetType()}");
                 return null;
             }
-
-            // Unit Price
-            // try
-            // {
-            //     // If a unit price is listed, it would be the last <p> tag
-            //     var unitPriceDiv = await allPElements.Last().InnerTextAsync();
-
-            //     // Use regex to confirm has leading $, digits, and /
-            //     if (Regex.Match(unitPriceDiv, @"$\d*.?\d?/").Success)
-            //     {
-            //         string amount = unitPriceDiv.Split("/")[0];
-            //         string unit = unitPriceDiv.Split("/")[1];
-
-            //         // If unit price is ml or g, normalize to L or kg
-            //         if(Regex.IsMatch(unit, @"\d*g\b")){
-
-            //         }
-            //             // unitPriceName will end up as g|kg|ml|L
-            //             string unitPriceName =
-            //                 Regex.Match(unitPriceDiv.Split("/")[1].ToLower(), @"(g|kg|ml|l)").ToString();
-            //             unitPriceName = unitPriceName.Replace("l", "L");
-            //     }
-            // }
-            // catch (Exception e)
-            // {
-            //     LogError($"{name} - Couldn't derive unit price\n{e.GetType()}");
-            //     return null;
-            // }
 
             try
             {
@@ -515,18 +560,6 @@ namespace Scraper
 
                 // Create Price History array with a single element
                 DatedPrice[] priceHistory = new DatedPrice[] { todaysDatedPrice };
-
-                // Get derived unit price and unit name
-                string? unitPriceString = DeriveUnitPriceString(size, currentPrice);
-                float? unitPrice = null;
-                string? unitName = "";
-                float? originalUnitQuantity = null;
-                if (unitPriceString != null)
-                {
-                    unitPrice = float.Parse(unitPriceString.Split("/")[0]);
-                    unitName = unitPriceString.Split("/")[1];
-                    originalUnitQuantity = float.Parse(unitPriceString.Split("/")[2]);
-                }
 
                 // Create product record with above values
                 Product product = new Product(
