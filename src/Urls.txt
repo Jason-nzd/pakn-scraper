@@ -15,9 +15,9 @@ https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/butchery/prepack
 https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/butchery/prepacked-pork?pg=1 category=pork
 https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/butchery/prepacked-sausages?pg=1 category=sausages
 
-https://www.paknsave.co.nz/shop/category/drinks/cold-drinks/soft-drinks?pg=1 pages=4
+https://www.paknsave.co.nz/shop/category/drinks/cold-drinks/soft-drinks?pg=1 pages=3
 https://www.paknsave.co.nz/shop/category/drinks/cold-drinks/fruit-drinks--juices?pg=1 category=juice pages=2
-https://www.paknsave.co.nz/shop/category/drinks/cold-drinks/sports--energy-drinks?pg=1 category=energy-drinks pages=3
+https://www.paknsave.co.nz/shop/category/drinks/cold-drinks/sports--energy-drinks?pg=1 category=energy-drinks pages=2
 
 https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/dairy--eggs/eggs?pg=1
 https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/dairy--eggs/butter--spreads?pg=1 category=butter
