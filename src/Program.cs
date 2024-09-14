@@ -1,9 +1,14 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using Microsoft.Playwright;
 using Microsoft.Extensions.Configuration;
 using static Scraper.CosmosDB;
 using static Scraper.Utilities;
 using System.Text.RegularExpressions;
+using PlaywrightExtraSharp;
+using PlaywrightExtraSharp.Models;
+using PlaywrightExtraSharp.Plugins.ExtraStealth;
+using System.Globalization;
+using Microsoft.Azure.Cosmos.Linq;
 
 // Pak Scraper
 // -----------
@@ -41,7 +46,6 @@ namespace Scraper
         public static HttpClient httpclient = new HttpClient();
 
         // Get config from appsettings.json
-
         public static IConfiguration config = new ConfigurationBuilder()
             .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true) //load base settings
             .AddJsonFile("appsettings.local.json", optional: true, reloadOnChange: true) //load local settings
@@ -289,30 +293,37 @@ namespace Scraper
             return;
         }
 
-        public async static Task EstablishPlaywright(bool headless)
+        public static async Task EstablishPlaywright(bool headless)
         {
             try
             {
-                // Launch Playwright Browser - Headless mode doesn't work with the anti-bot mechanisms,
-                //  so a regular browser window is launched
-                playwright = await Playwright.CreateAsync();
-                browser = await playwright.Chromium.LaunchAsync(
-                    new BrowserTypeLaunchOptions { Headless = headless }
-                );
+                // Initialize Playwright Extra with Chromium
+                var playwrightExtra = new PlaywrightExtra(BrowserTypeEnum.Chromium);
 
-                // Launch Page 
-                playwrightPage = await browser.NewPageAsync();
+                // Install browser
+                playwrightExtra.Install();
+
+                // Use stealth plugin
+                playwrightExtra.Use(new StealthExtraPlugin());
+
+                // Launch the browser
+                await playwrightExtra.LaunchAsync(new()
+                {
+                    Headless = headless
+                });
+
+                // Create a new page
+                playwrightPage = await playwrightExtra.NewPageAsync(
+                    new BrowserNewPageOptions() { }
+                );
 
                 // Route exclusions, such as ads, trackers, etc
                 await RoutePlaywrightExclusions();
                 return;
             }
-            catch (PlaywrightException)
+            catch (Exception e)
             {
-                LogError(
-                    "Browser must be manually installed using: \n" +
-                    "pwsh bin/Debug/net6.0/playwright.ps1 install\n"
-                );
+                LogError(e.Message);
                 throw;
             }
         }
