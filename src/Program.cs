@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using Microsoft.Playwright;
 using Microsoft.Extensions.Configuration;
 using static Scraper.CosmosDB;
@@ -212,14 +212,32 @@ namespace Scraper
                         }
                         else if (!uploadToDatabase && scrapedProduct != null)
                         {
-                            // In Dry Run mode, print a log row for every product
+                            // In Dry Run mode, prepare a log row for every product
                             string unitString = scrapedProduct.unitPrice != null ?
                                 "$" + scrapedProduct.unitPrice + " /" + scrapedProduct.unitName : "";
 
+                            // Normalize 0.99kg or less sizes to grams
+                            string normalizedSize = scrapedProduct.size!;
+                            if (Regex.Match(scrapedProduct.size!, @"0.\d*kg").Success)
+                            {
+                                float kgFloatSize = float.Parse(scrapedProduct.size!.Replace("kg", ""));
+                                double gramSize = Math.Round(kgFloatSize * 1000, 0);
+                                normalizedSize = gramSize.ToString() + "g";
+                            }
+
+                            // Normalize 0.99L or less sizes to ml
+                            if (Regex.Match(scrapedProduct.size!, @"0.\d*L").Success)
+                            {
+                                float litreFloatSize = float.Parse(scrapedProduct.size!.Replace("L", ""));
+                                double mlSize = Math.Round(litreFloatSize * 1000, 0);
+                                normalizedSize = mlSize.ToString() + "ml";
+                            }
+
+                            // Log completed row entry
                             Console.WriteLine(
                                 scrapedProduct!.id.PadLeft(9) + " | " +
                                 scrapedProduct.name!.PadRight(60).Substring(0, 60) + " | " +
-                                scrapedProduct.size!.PadRight(10) + " | $" +
+                                normalizedSize!.PadRight(10) + " | $" +
                                 scrapedProduct.currentPrice.ToString().PadLeft(5) + " | " +
                                 unitString
                             );
