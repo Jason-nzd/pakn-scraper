@@ -220,28 +220,11 @@ namespace Scraper
                             string unitString = scrapedProduct.unitPrice != null ?
                                 "$" + scrapedProduct.unitPrice + " /" + scrapedProduct.unitName : "";
 
-                            // Normalize 0.99kg or less sizes to grams
-                            string normalizedSize = scrapedProduct.size!;
-                            if (Regex.Match(scrapedProduct.size!, @"0.\d*kg").Success)
-                            {
-                                float kgFloatSize = float.Parse(scrapedProduct.size!.Replace("kg", ""));
-                                double gramSize = Math.Round(kgFloatSize * 1000, 0);
-                                normalizedSize = gramSize.ToString() + "g";
-                            }
-
-                            // Normalize 0.99L or less sizes to ml
-                            if (Regex.Match(scrapedProduct.size!, @"0.\d*L").Success)
-                            {
-                                float litreFloatSize = float.Parse(scrapedProduct.size!.Replace("L", ""));
-                                double mlSize = Math.Round(litreFloatSize * 1000, 0);
-                                normalizedSize = mlSize.ToString() + "ml";
-                            }
-
                             // Log completed row entry
                             Console.WriteLine(
                                 scrapedProduct!.id.PadLeft(9) + " | " +
                                 scrapedProduct.name!.PadRight(60).Substring(0, 60) + " | " +
-                                normalizedSize!.PadRight(10) + " | $" +
+                                scrapedProduct.size!.PadRight(10) + " | $" +
                                 scrapedProduct.currentPrice.ToString().PadLeft(5) + " | " +
                                 unitString
                             );
@@ -355,12 +338,13 @@ namespace Scraper
             string[] category
         )
         {
-            // Product Name, Size, Dollar and Cent Price as strings
             string name, size = "", dollarString = "", centString = "";
 
+            // Name - the first <h3> tag of each element contains the product name
+            // -------------------------------------------------------------------
             try
             {
-                // Name - the first <h3> tag of each element contains the product name
+
                 var h3Tag = await productElement.QuerySelectorAsync("h3");
                 name = await h3Tag!.InnerTextAsync();
             }
@@ -372,6 +356,7 @@ namespace Scraper
             }
 
             // Image URL & Product ID
+            // ----------------------
             string id;
             try
             {
@@ -432,6 +417,7 @@ namespace Scraper
             }
 
             // Price - Combine dollar and cent strings, then parse into a float
+            // ----------------------------------------------------------------
             float currentPrice;
             try
             {
@@ -457,6 +443,7 @@ namespace Scraper
             //     }
 
             // Unit Price - Scrape the unit price if it is listed
+            // --------------------------------------------------
             // Examples: $1.64/1L
             float? unitPrice = null;
             string? unitName = "";
@@ -509,7 +496,8 @@ namespace Scraper
                     if (unitName == "1L") unitName = "L";
                     if (unitName == "1kg") unitName = "kg";
 
-                    // If product size is missing, derive from the unit price
+                    // Size - If product size is missing, derive from the unit price
+                    // -------------------------------------------------------------
                     if (size == "")
                     {
                         // Calculate sizes to 2, 1, and 0 decimal points
@@ -529,6 +517,22 @@ namespace Scraper
                         {
                             size = Math.Round(derivedSize, 0).ToString() + "pk";
                         }
+
+                        // Normalize 0.99kg or less sizes to grams
+                        if (Regex.Match(size, @"0.\d*kg").Success)
+                        {
+                            float kgFloatSize = float.Parse(size.Replace("kg", ""));
+                            double gramSize = Math.Round(kgFloatSize * 1000, 0);
+                            size = gramSize.ToString() + "g";
+                        }
+
+                        // Normalize 0.99L or less sizes to ml
+                        if (Regex.Match(size, @"0.\d*L").Success)
+                        {
+                            float litreFloatSize = float.Parse(size.Replace("L", ""));
+                            double mlSize = Math.Round(litreFloatSize * 1000, 0);
+                            size = mlSize.ToString() + "ml";
+                        }
                     }
                 }
             }
@@ -538,6 +542,8 @@ namespace Scraper
                 return null;
             }
 
+            // Manual Product Data Overrides from ProductOverrides.txt
+            // -------------------------------------------------------
             try
             {
                 // Check for manual product data overrides based on product ID
