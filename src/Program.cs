@@ -7,8 +7,7 @@ using System.Text.RegularExpressions;
 using PlaywrightExtraSharp;
 using PlaywrightExtraSharp.Models;
 using PlaywrightExtraSharp.Plugins.ExtraStealth;
-using System.Globalization;
-using Microsoft.Azure.Cosmos.Linq;
+using Microsoft.VisualBasic;
 
 // Pak Scraper
 // -----------
@@ -152,11 +151,21 @@ namespace Scraper
                     }
 
                     // Wait for prices to load in
-                    string price = await playwrightPage.GetByTestId("price-dollars").Last.InnerHTMLAsync();
+                    string price =
+                        await playwrightPage.GetByTestId("price-dollars").Last.InnerHTMLAsync();
 
-                    // Query all product card entries, and log how many were found
-                    var productElements = await playwrightPage.QuerySelectorAllAsync("#search > div > div:nth-child(4) > div");
+                    // Product elements should be the grandparents of every h3 tag
+                    var possibleProductElements =
+                        await playwrightPage.QuerySelectorAllAsync("xpath=//h3/../..");
 
+                    // Verify each element contains an attribute data-testid="product-..."
+                    var productElements = possibleProductElements.ToList().Where(
+                        element => (
+                            element.GetAttributeAsync("data-testid") != null &&
+                            element.GetAttributeAsync("data-testid").Result!.Contains("product-"))
+                    ).ToList();
+
+                    // Log how many valid products were found on this page
                     Log(
                         $"{productElements.Count} Products Found \t" +
                         $"Total Time Elapsed: {stopwatch.Elapsed.Minutes}:{stopwatch.Elapsed.Seconds.ToString().PadLeft(2, '0')}\t" +
