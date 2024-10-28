@@ -148,7 +148,7 @@ namespace Scraper
             string cleanURL = url;
 
             // If url contains 'search?' or similar search queries, keep all query parameters
-            if (url.ToLower().Contains("search?") || url.ToLower().Contains("f=tags") || url.ToLower().Contains("q="))
+            if (Regex.Match(url.ToLower(), @"(search\?|f\=tags|q\=|refinementlist)").Success)
             {
                 return url;
             }
