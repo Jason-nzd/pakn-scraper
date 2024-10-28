@@ -7,7 +7,7 @@ using System.Text.RegularExpressions;
 using PlaywrightExtraSharp;
 using PlaywrightExtraSharp.Models;
 using PlaywrightExtraSharp.Plugins.ExtraStealth;
-using Microsoft.VisualBasic;
+using System.Web;
 
 // Pak Scraper
 // -----------
@@ -135,9 +135,18 @@ namespace Scraper
                     // Separate out url from categorisedUrl
                     string url = categorisedUrls[i].url;
 
+                    // Create shortened url for logging
+                    string shortenedLoggingUrl = HttpUtility.UrlDecode(url)
+                        .Replace("https://www.", "")
+                        .Replace("paknsave.co.nz/shop/category/", "")
+                        .Replace("&refinementList[category2NI]", " ")
+                        .Trim();
+
+                    shortenedLoggingUrl = Regex.Replace(shortenedLoggingUrl, @"\[\d\]=", "- ");
+
                     // Log current sequence of page scrapes, the total num of pages to scrape
                     LogWarn(
-                        $"\n[{i + 1}/{categorisedUrls.Count()}] {url.Substring(12)}"
+                        $"\n[{i + 1}/{categorisedUrls.Count()}] {shortenedLoggingUrl}"
                     );
 
                     // Try load page and wait for full content to dynamically load in
