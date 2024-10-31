@@ -138,7 +138,7 @@ namespace Scraper
                     // Create shortened url for logging
                     string shortenedLoggingUrl = HttpUtility.UrlDecode(url)
                         .Replace("https://www.", "")
-                        .Replace("paknsave.co.nz/shop/category/", "")
+                        .Replace("shop/category/", "")
                         .Replace("&refinementList[category2NI]", " ")
                         .Trim();
 
@@ -572,7 +572,17 @@ namespace Scraper
                     throw new Exception(name + " is overridden as an invalid product.");
 
                 // If override lists a sizes or category, use these instead of the scraped values.
-                if (overrides.size != "") size = overrides.size;
+                if (overrides.size != "")
+                {
+                    size = overrides.size;
+
+                    // Also override unit price using new size
+                    string derivedUnitPriceString = DeriveUnitPriceString(size, currentPrice)!;
+                    string amountString = derivedUnitPriceString.Split("/")[0];
+                    unitPrice = float.Parse(amountString);
+                    unitName = derivedUnitPriceString.Split("/")[1];
+
+                }
                 if (overrides.category != "") category = new string[] { overrides.category };
 
                 // Source website
