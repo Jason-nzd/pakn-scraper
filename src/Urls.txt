@@ -64,7 +64,7 @@ https://www.paknsave.co.nz/shop/category/pantry/biscuits--crackers/rice-crackers
 https://www.paknsave.co.nz/shop/category/pantry/biscuits--crackers/rice-cakes?pg=1 category=other-snacks
 
 https://www.paknsave.co.nz/shop/category/pantry/confectionery/boxed-chocolates?pg=1 category=boxed-chocolate pages=2
-https://www.paknsave.co.nz/shop/category/pantry/confectionery/chocolate-blocks?pg=1 category=chocolate pages=5
+https://www.paknsave.co.nz/shop/category/pantry/confectionery/chocolate-blocks?pg=1 category=chocolate pages=3
 https://www.paknsave.co.nz/shop/category/pantry/snack-foods?pg=1&refinementList%5Bcategory2NI%5D%5B0%5D=Chips&refinementList%5Bcategory2NI%5D%5B1%5D=Corn%20Chips&refinementList%5Bcategory2NI%5D%5B2%5D=Potato%20Chips&refinementList%5Bcategory2NI%5D%5B3%5D=Vege%20Snacks category=chips pages=3
 https://www.paknsave.co.nz/shop/category/pantry/snack-foods?pg=1&refinementList%5Bcategory2NI%5D%5B0%5D=Cereal%20%26%20Snack%20Bars&refinementList%5Bcategory2NI%5D%5B1%5D=Muesli%20Bars&refinementList%5Bcategory2NI%5D%5B2%5D=Nutritional%20Bars category=muesli-bars pages=2
 https://www.paknsave.co.nz/shop/category/pantry/snack-foods?pg=1&refinementList%5Bcategory2NI%5D%5B0%5D=Bread%20Snacks&refinementList%5Bcategory2NI%5D%5B1%5D=Popcorn&refinementList%5Bcategory2NI%5D%5B2%5D=Rice%20Crackers&refinementList%5Bcategory2NI%5D%5B3%5D=Snack%20Foods&refinementList%5Bcategory2NI%5D%5B4%5D=Snack%20Mixes&refinementList%5Bcategory2NI%5D%5B5%5D=Vege%20Snacks&refinementList%5Bcategory2NI%5D%5B6%5D=Wellness%20%26%20Sports%20Nutrition&refinementList%5Bcategory2NI%5D%5B7%5D=Meat%20Snacks category=other-snacks pages=2
