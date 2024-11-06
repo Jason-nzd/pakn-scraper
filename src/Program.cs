@@ -163,15 +163,16 @@ namespace Scraper
                     string price =
                         await playwrightPage.GetByTestId("price-dollars").Last.InnerHTMLAsync();
 
-                    // Product elements should be the grandparents of every h3 tag
-                    var possibleProductElements =
-                        await playwrightPage.QuerySelectorAllAsync("xpath=//h3/../..");
+                    // Get all div elements
+                    var allDivElements =
+                        await playwrightPage.QuerySelectorAllAsync("div");
 
-                    // Verify each element contains an attribute data-testid="product-..."
-                    var productElements = possibleProductElements.ToList().Where(
+                    // Verify each element contains an attribute data-testid="...-EA-000"
+                    var productElements = allDivElements.Where(
                         element => (
-                            element.GetAttributeAsync("data-testid") != null &&
-                            element.GetAttributeAsync("data-testid").Result!.Contains("product-"))
+                            (element.GetAttributeAsync("data-testid").Result ?? "")
+                            .Contains("-EA-000")
+                        )
                     ).ToList();
 
                     // Log how many valid products were found on this page
@@ -356,47 +357,12 @@ namespace Scraper
             string[] category
         )
         {
-            string name, size = "", dollarString = "", centString = "";
-
-            // Name - the first <h3> tag of each element contains the product name
-            // -------------------------------------------------------------------
-            try
-            {
-
-                var h3Tag = await productElement.QuerySelectorAsync("h3");
-                name = await h3Tag!.InnerTextAsync();
-            }
-            catch (Exception e)
-            {
-                LogError("Couldn't scrape name from h3 tag\n" + e.GetType());
-                // Return null if any exceptions occurred during scraping
-                return null;
-            }
-
-            // Image URL & Product ID
-            // ----------------------
-            string id;
-            try
-            {
-                // Image Url - The last img tag contains the product image
-                var imgDiv = await productElement.QuerySelectorAllAsync("a > div > img");
-                string? imgUrl = await imgDiv.Last().GetAttributeAsync("src");
-
-                // ID - get product ID from image filename
-                var imageFilename = imgUrl!.Split("/").Last();      // get the last /section of the url
-                imageFilename = imageFilename.Split("?").First();   // remove any query params
-                id = "P" + imageFilename.Split(".").First();        // prepend P to ID
-            }
-            catch (Exception e)
-            {
-                LogError($"{name} - Couldn't scrape image URL\n{e.GetType()}");
-                return null;
-            }
+            // Product Name, Size, Dollar and Cent Price as strings
+            string name = "", size = "", dollarString = "", centString = "";
 
             // Get all <p> elements, then loop through each and assign values 
             // based on the data-testid attribute.
             var allPElements = await productElement.QuerySelectorAllAsync("p");
-
             foreach (var p in allPElements)
             {
                 string? pType = "";
@@ -413,6 +379,18 @@ namespace Scraper
 
                 switch (pType)
                 {
+                    // Scrape name
+                    case "product-title":
+                        name = await p.InnerTextAsync();
+                        break;
+
+                    // Scrape size
+                    case "product-subtitle":
+                        size = await p.InnerTextAsync();
+                        size = size.Replace("l", "L");  // capitalize L for litres
+                        if (size == "kg") size = "per kg";
+                        break;
+
                     // Scrape price dollar and cent elements.
                     // If a multi-buy and single-buy price exists, the single-buy price will 
                     // happen later in the loop and will be set as the final price
@@ -422,11 +400,6 @@ namespace Scraper
 
                     case "price-cents":
                         centString = await p.InnerTextAsync();
-                        break;
-
-                    // Size tag is only available on some pages
-                    case "product-subtitle":
-                        size = await p.InnerTextAsync();
                         break;
 
                     default:
@@ -451,6 +424,27 @@ namespace Scraper
                 LogError($"{name} - Couldn't scrape price info\n{e.GetType()}");
                 return null;
             }
+
+            // Image URL & Product ID
+            // ----------------------
+            string id;
+            try
+            {
+                // Image Url - The last img tag contains the product image
+                var imgDiv = await productElement.QuerySelectorAllAsync("a > div > img");
+                string? imgUrl = await imgDiv.Last().GetAttributeAsync("src");
+
+                // ID - get product ID from image filename
+                var imageFilename = imgUrl!.Split("/").Last();      // get the last /section of the url
+                imageFilename = imageFilename.Split("?").First();   // remove any query params
+                id = "P" + imageFilename.Split(".").First();        // prepend P to ID
+            }
+            catch (Exception e)
+            {
+                LogError($"{name} - Couldn't scrape image URL\n{e.GetType()}");
+                return null;
+            }
+
 
             //     // If multi-item and single-item prices are shown, override with the single-item price
             //     var singleItemSpan = await productElement.QuerySelectorAsync(".fs-product-card__single-price");
