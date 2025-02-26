@@ -639,8 +639,9 @@ namespace Scraper
                 // Goto any page to trigger geo-location detection
                 await playwrightPage!.GotoAsync("https://www.paknsave.co.nz/");
 
-                // Wait for page to automatically reload with the new geo-location
+                // Reload page with new geo-location
                 Thread.Sleep(4000);
+                await playwrightPage!.GotoAsync("https://www.paknsave.co.nz/");
                 await playwrightPage.WaitForSelectorAsync("div.js-quick-links");
 
                 LogWarn($"Selected Store: {await GetStoreLocationName()}");
