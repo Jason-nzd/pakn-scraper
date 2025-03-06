@@ -631,27 +631,41 @@ namespace Scraper
         // -------------------------------
         private static async Task OpenInitialPageAndSetLocation()
         {
-            try
+            // Set geo-location data
+            await SetGeoLocation();
+
+            int maxAttempts = 8;
+            for (int attempt = 0; attempt < maxAttempts; attempt++)
             {
-                // Set geo-location data
-                await SetGeoLocation();
+                try
+                {
+                    // Goto any page to trigger geo-location detection
+                    await playwrightPage!.GotoAsync("https://www.paknsave.co.nz/");
 
-                // Goto any page to trigger geo-location detection
-                await playwrightPage!.GotoAsync("https://www.paknsave.co.nz/");
-
-                // Reload page with new geo-location
-                Thread.Sleep(4000);
-                await playwrightPage!.GotoAsync("https://www.paknsave.co.nz/");
-                await playwrightPage.WaitForSelectorAsync("div.js-quick-links");
-
-                LogWarn($"Selected Store: {await GetStoreLocationName()}");
-                return;
+                    // Once div.js-quick-links is loaded, the page is ready
+                    await playwrightPage.WaitForSelectorAsync(
+                        "div.js-quick-links",
+                        new PageWaitForSelectorOptions()
+                        {
+                            Timeout = 5000
+                        }
+                    );
+                    break;
+                }
+                catch (Exception)
+                {
+                    if (attempt == maxAttempts - 1)
+                    {
+                        LogError("Unable to load initial page, check network connection");
+                        throw new Exception("Unable to load initial page");
+                    }
+                    LogWarn($"Retrying Geolocation Detection {attempt + 1}/{maxAttempts}");
+                }
             }
-            catch (Exception e)
-            {
-                LogError(e.ToString());
-                throw;
-            }
+
+            // Log selected store location
+            LogWarn($"Selected Store: {await GetStoreLocationName()}");
+            return;
         }
 
         // SetGeoLocation()
