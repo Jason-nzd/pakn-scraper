@@ -266,7 +266,10 @@ namespace Scraper
                 }
                 catch (PlaywrightException e)
                 {
-                    LogError("Unable to Load Web Page - " + e.Message);
+                    if (!e.Message.Contains("ERR_ABORTED")) // Ignore aborted requests
+                    {
+                        LogError("Unable to Load Web Page - " + e.Message); // Log other errors
+                    }
                 }
                 catch (Exception e)
                 {
@@ -631,23 +634,24 @@ namespace Scraper
         // -------------------------------
         private static async Task OpenInitialPageAndSetLocation()
         {
-            // Set geo-location data
-            await SetGeoLocation();
-
-            int maxAttempts = 8;
+            int maxAttempts = 4;
             for (int attempt = 0; attempt < maxAttempts; attempt++)
             {
                 try
                 {
+                    // Set geo-location data
+                    await SetGeoLocation();
+
                     // Goto any page to trigger geo-location detection
                     await playwrightPage!.GotoAsync("https://www.paknsave.co.nz/");
+                    Thread.Sleep(2000);
 
                     // Once div.js-quick-links is loaded, the page is ready
                     await playwrightPage.WaitForSelectorAsync(
                         "div.js-quick-links",
                         new PageWaitForSelectorOptions()
                         {
-                            Timeout = 5000
+                            Timeout = 10000
                         }
                     );
                     break;
