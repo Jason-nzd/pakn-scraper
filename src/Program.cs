@@ -167,11 +167,15 @@ namespace Scraper
                     var allDivElements =
                         await playwrightPage.QuerySelectorAllAsync("div");
 
-                    // Verify each element contains an attribute data-testid="...-EA-000"
+                    // Verify each element contains an attribute data-testid
+                    // ending in either -EA-000 or-KGM-000"
                     var productElements = allDivElements.Where(
                         element => (
                             (element.GetAttributeAsync("data-testid").Result ?? "")
                             .Contains("-EA-000")
+                            ||
+                            (element.GetAttributeAsync("data-testid").Result ?? "")
+                            .Contains("-KGM-000")
                         )
                     ).ToList();
 
