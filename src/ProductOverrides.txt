@@ -84,3 +84,9 @@ P5310400 category=pork
 P5329428 450g
 P5329427 450g
 P5289187 50pack
+P5314891 508g
+P5314892 508g
+P5122637 1kg
+P5294700 category=sausages
+P5316462 category=patties-meatballs
+P5252613 category=patties-meatballs
