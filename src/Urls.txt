@@ -30,7 +30,7 @@ https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/deli-salads--coo
 https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/deli-salads--cooked-meats/precooked-chicken--poultry?pg=1 category=chicken
 https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/deli-salads--cooked-meats?pg=1&refinementList%5Bcategory2NI%5D%5B0%5D=Dips%2C%20Pesto%20%26%20Pate&refinementList%5Bcategory2NI%5D%5B1%5D=Fresh%20Deli%20Savouries&refinementList%5Bcategory2NI%5D%5B2%5D=Hummus&refinementList%5Bcategory2NI%5D%5B3%5D=Olives%20%26%20Antipasti%20Mixes category=other-deli-foods
 
-https://www.paknsave.co.nz/shop/Search?s=popularity&sd=0&f=tags%3DFresh%2520Seafood%257CFresh%2520Smoked%2520Fish&q=salmon category=salmon
+https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/seafood?pg=1&refinementList%5Bcategory2NI%5D%5B0%5D=Fresh%20Fish%20Fillets%20%26%20Steaks&refinementList%5Bcategory2NI%5D%5B1%5D=Fresh%20Seafood&refinementList%5Bcategory2NI%5D%5B2%5D=Fresh%20Smoked%20Fish category=salmon
 https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/seafood/frozen-fish--seafood?pg=1 category=frozen-seafood
 https://www.paknsave.co.nz/shop/category/fresh-foods-and-bakery/seafood/fresh-shellfish?pg=1 category=seafood
 
@@ -54,7 +54,7 @@ https://www.paknsave.co.nz/shop/category/chilled-frozen-and-desserts/frozen-food
 https://www.paknsave.co.nz/shop/category/chilled-frozen-and-desserts/frozen-foods/frozen-vegetarian?pg=1 category=other-savouries
 https://www.paknsave.co.nz/shop/category/chilled-frozen-and-desserts/frozen-foods/frozen-vegetarian?pg=1 category=meat-alternatives
 
-https://www.paknsave.co.nz/shop/category/hot-and-cold-drinks/hot-chocolate--milk-drinks?pg=1 category=drinking-chocolate
+https://www.paknsave.co.nz/shop/category/hot-and-cold-drinks/hot-chocolate--milk-drinks/drinking-chocolate--milk-drink-mixes?pg=1 category=drinking-chocolate
 https://www.paknsave.co.nz/shop/category/hot-and-cold-drinks/tea?pg=1 category=black-tea
 https://www.paknsave.co.nz/shop/category/hot-and-cold-drinks/tea/fruit-herbal--flavoured-tea?pg=1 category=herbal-tea
 https://www.paknsave.co.nz/shop/category/hot-and-cold-drinks/tea/chai-tea?pg=1 category=herbal-tea
