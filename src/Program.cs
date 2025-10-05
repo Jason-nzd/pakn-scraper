@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿#nullable enable
+using System.Diagnostics;
 using Microsoft.Playwright;
 using Microsoft.Extensions.Configuration;
 using static Scraper.CosmosDB;
@@ -17,7 +18,7 @@ namespace Scraper
 {
     public class Program
     {
-        static int secondsDelayBetweenPageScrapes = 11;
+        static readonly int secondsDelayBetweenPageScrapes = 11;
         static bool uploadToDatabase = false;
         static bool uploadImages = false;
         static bool useHeadlessBrowser = false;
