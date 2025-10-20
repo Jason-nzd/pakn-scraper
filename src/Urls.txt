@@ -89,7 +89,7 @@ https://www.paknsave.co.nz/shop/category/hot-and-cold-drinks/tea/black-tea?pg=1
 https://www.paknsave.co.nz/shop/category/hot-and-cold-drinks/tea/green-tea?pg=1
 https://www.paknsave.co.nz/shop/category/hot-and-cold-drinks/tea?pg=1&refinementList%5Bcategory2NI%5D%5B0%5D=Fruit%2C%20Herbal%20%26%20Flavoured%20Tea&refinementList%5Bcategory2NI%5D%5B1%5D=Chai%20Tea category=herbal-tea
 https://www.paknsave.co.nz/shop/category/hot-and-cold-drinks/coffee?pg=1 pages=2
-https://www.paknsave.co.nz/shop/category/hot-and-cold-drinks/hot-chocolate--milk-drinks?pg=1 category=drinking-chocolate pages=2
+https://www.paknsave.co.nz/shop/category/hot-and-cold-drinks/hot-chocolate--milk-drinks/drinking-chocolate--milk-drink-mixes?pg=1 category=drinking-chocolate pages=2
 https://www.paknsave.co.nz/shop/category/hot-and-cold-drinks/soft-drinks--mixers?pg=1 category=soft-drinks pages=2
 https://www.paknsave.co.nz/shop/category/hot-and-cold-drinks/sports--energy-drinks?pg=1 category=energy-drinks pages=2
 https://www.paknsave.co.nz/shop/category/hot-and-cold-drinks/juice--smoothies?pg=1 category=juice
