@@ -150,8 +150,17 @@ namespace Scraper
                         $"\n[{i + 1}/{categorisedUrls.Count()}] {shortenedLoggingUrl}"
                     );
 
-                    // Try load page and wait for full content to dynamically load in
-                    await playwrightPage!.GotoAsync(url);
+                    // Try load page with upto 3 retries
+                    int maxLoadAttempts = 3;
+                    for (int loadAttempt = 0; loadAttempt < maxLoadAttempts; loadAttempt++)
+                    {
+                        try
+                        {
+                            // Navigate to the URL
+                            await playwrightPage!.GotoAsync(
+                                url,
+                                new PageGotoOptions() { Timeout = 8000 }
+                            );
 
                     // Scroll down page to trigger lazy loading
                     for (int scrollLoop = 0; scrollLoop < 3; scrollLoop++)
@@ -164,6 +173,20 @@ namespace Scraper
                     string price =
                         await playwrightPage.GetByTestId("price-dollars").Last.InnerHTMLAsync();
 
+                            // If successful, break out of load attempt loop
+                            break;
+                        }
+                        catch (Exception)
+                        {
+                            if (loadAttempt == maxLoadAttempts - 1)
+                            {
+                                throw; // re-throw exception if max attempts reached
+                            }
+                            LogWarn(
+                                $"Retrying page load {loadAttempt + 1}/{maxLoadAttempts}..."
+                            );
+                        }
+                    }
                     // Get all div elements
                     var allDivElements =
                         await playwrightPage.QuerySelectorAllAsync("div");
