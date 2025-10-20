@@ -135,6 +135,7 @@ namespace Scraper
                 {
                     // Separate out url from categorisedUrl
                     string url = categorisedUrls[i].url;
+                    if (url == "") continue; // skip if url is blank (invalidated earlier)
 
                     // Create shortened url for logging
                     string shortenedLoggingUrl = HttpUtility.UrlDecode(url)
@@ -143,7 +144,7 @@ namespace Scraper
                         .Replace("&refinementList[category2NI]", " ")
                         .Trim();
 
-                    shortenedLoggingUrl = Regex.Replace(shortenedLoggingUrl, @"\[\d\]=", "- ");
+                    //shortenedLoggingUrl = Regex.Replace(shortenedLoggingUrl, @"\[\d\]=", "- ");
 
                     // Log current sequence of page scrapes, the total num of pages to scrape
                     LogWarn(
@@ -162,16 +163,16 @@ namespace Scraper
                                 new PageGotoOptions() { Timeout = 8000 }
                             );
 
-                    // Scroll down page to trigger lazy loading
-                    for (int scrollLoop = 0; scrollLoop < 3; scrollLoop++)
-                    {
-                        await playwrightPage.Keyboard.PressAsync("PageDown");
-                        Thread.Sleep(120);
-                    }
+                            // Scroll down page to trigger lazy loading
+                            for (int scrollLoop = 0; scrollLoop < 3; scrollLoop++)
+                            {
+                                await playwrightPage.Keyboard.PressAsync("PageDown");
+                                Thread.Sleep(120);
+                            }
 
-                    // Wait for prices to load in
-                    string price =
-                        await playwrightPage.GetByTestId("price-dollars").Last.InnerHTMLAsync();
+                            // Wait for prices to load in
+                            string price =
+                                await playwrightPage.GetByTestId("price-dollars").Last.InnerHTMLAsync();
 
                             // If successful, break out of load attempt loop
                             break;
@@ -187,9 +188,50 @@ namespace Scraper
                             );
                         }
                     }
+
+                    // Detect desired url page number
+                    int desiredPageNumber = 1;
+                    Match pageMatch = Regex.Match(url, @"[?&]pg=(\d+)");
+                    if (pageMatch.Success)
+                    {
+                        desiredPageNumber = int.Parse(pageMatch.Groups[1].Value);
+                    }
+
+                    // Detect pagination pages available
+                    int availablePages = 1;
+                    try
+                    {
+                        var paginationElement =
+                            await playwrightPage!.QuerySelectorAllAsync("nav[aria-label='pagination'] > ul");
+                        availablePages =
+                            (await paginationElement[0].QuerySelectorAllAsync("li")).Count - 2; // minus prev/next buttons
+                    }
+                    catch (Exception)
+                    {
+                        // No pagination found, so only 1 page is available
+                        continue;
+                    }
+
+                    // Check if the next url is for the same category but with a higher page number
+                    CategorisedURL nextCategorisedUrl = categorisedUrls[i + 1];
+                    string nextUrlWithoutPageParam =
+                        nextCategorisedUrl.url.Substring(0, nextCategorisedUrl.url.IndexOf("?") - 1);
+
+                    string currentUrlWithoutPageParam =
+                        url.Substring(0, url.IndexOf("?") - 1);
+
+                    if (currentUrlWithoutPageParam == nextUrlWithoutPageParam &&
+                        desiredPageNumber + 1 > availablePages)
+                    {
+                        // If the detected available pages is less than the next desired page number,
+                        // invalidate the next url to prevent unnecessary scraping attempts
+                        nextCategorisedUrl.url = "";
+                        categorisedUrls[i + 1] = nextCategorisedUrl;
+                    }
+
                     // Get all div elements
                     var allDivElements =
-                        await playwrightPage.QuerySelectorAllAsync("div");
+                        await playwrightPage!.QuerySelectorAllAsync("div");
 
                     // Verify each element contains an attribute data-testid
                     // ending in either -EA-000 or-KGM-000"
@@ -205,9 +247,10 @@ namespace Scraper
 
                     // Log how many valid products were found on this page
                     Log(
-                        $"{productElements.Count} Products Found \t" +
-                        $"Total Time Elapsed: {stopwatch.Elapsed.Minutes}:{stopwatch.Elapsed.Seconds.ToString().PadLeft(2, '0')}\t" +
-                        $"Category: {categorisedUrls[i].category}"
+                        $"{productElements.Count} Products Found \t".PadRight(16) +
+                        $"Total Time Elapsed: {stopwatch.Elapsed.Minutes}:{stopwatch.Elapsed.Seconds.ToString().PadLeft(2, '0').PadRight(8)}\t" +
+                        $"Category: {categorisedUrls[i].category}".PadRight(30) +
+                        $"Page: {desiredPageNumber}/{availablePages}"
                     );
 
                     // Create per-page counters for logging purposes
