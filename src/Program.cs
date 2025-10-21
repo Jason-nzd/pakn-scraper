@@ -144,8 +144,6 @@ namespace Scraper
                         .Replace("&refinementList[category2NI]", " ")
                         .Trim();
 
-                    //shortenedLoggingUrl = Regex.Replace(shortenedLoggingUrl, @"\[\d\]=", "- ");
-
                     // Log current sequence of page scrapes, the total num of pages to scrape
                     LogWarn(
                         $"\n[{i + 1}/{categorisedUrls.Count()}] {shortenedLoggingUrl}"
@@ -213,22 +211,24 @@ namespace Scraper
                     }
 
                     // Check if the next url is for the same category but with a higher page number
-                    CategorisedURL nextCategorisedUrl = categorisedUrls[i + 1];
-                    string nextUrlWithoutPageParam =
-                        nextCategorisedUrl.url.Substring(0, nextCategorisedUrl.url.IndexOf("?") - 1);
-
-                    string currentUrlWithoutPageParam =
-                        url.Substring(0, url.IndexOf("?") - 1);
-
-                    if (currentUrlWithoutPageParam == nextUrlWithoutPageParam &&
-                        desiredPageNumber + 1 > availablePages)
+                    if (i + 1 < categorisedUrls.Count())
                     {
-                        // If the detected available pages is less than the next desired page number,
-                        // invalidate the next url to prevent unnecessary scraping attempts
-                        nextCategorisedUrl.url = "";
-                        categorisedUrls[i + 1] = nextCategorisedUrl;
-                    }
+                        CategorisedURL nextCategorisedUrl = categorisedUrls[i + 1];
+                        string nextUrlWithoutPageParam =
+                            nextCategorisedUrl.url.Substring(0, nextCategorisedUrl.url.IndexOf("?") - 1);
 
+                        string currentUrlWithoutPageParam =
+                            url.Substring(0, url.IndexOf("?") - 1);
+
+                        if (currentUrlWithoutPageParam == nextUrlWithoutPageParam &&
+                            desiredPageNumber + 1 > availablePages)
+                        {
+                            // If the detected available pages is less than the next desired page number,
+                            // invalidate the next url to prevent unnecessary scraping attempts
+                            nextCategorisedUrl.url = "";
+                            categorisedUrls[i + 1] = nextCategorisedUrl;
+                        }
+                    }
                     // Get all div elements
                     var allDivElements =
                         await playwrightPage!.QuerySelectorAllAsync("div");
