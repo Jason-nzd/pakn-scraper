@@ -220,8 +220,13 @@ namespace Scraper
                         string currentUrlWithoutPageParam =
                             url.Substring(0, url.IndexOf("?") - 1);
 
-                        if (currentUrlWithoutPageParam == nextUrlWithoutPageParam &&
-                            desiredPageNumber + 1 > availablePages)
+                        bool nextUrlIsSameCategory = nextUrlWithoutPageParam == currentUrlWithoutPageParam;
+
+                        int nextUrlPageParam =
+                            int.Parse(HttpUtility.ParseQueryString(new Uri(nextCategorisedUrl.url).Query
+                            ).Get("pg") ?? "1");
+
+                        if (nextUrlIsSameCategory && nextUrlPageParam > availablePages)
                         {
                             // If the detected available pages is less than the next desired page number,
                             // invalidate the next url to prevent unnecessary scraping attempts
