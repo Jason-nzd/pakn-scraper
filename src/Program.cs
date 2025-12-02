@@ -720,16 +720,10 @@ namespace Scraper
 
                     // Goto any page to trigger geo-location detection
                     await playwrightPage!.GotoAsync("https://www.paknsave.co.nz/");
-                    Thread.Sleep(2000);
+                    Thread.Sleep(4000);
 
-                    // Once div.js-quick-links is loaded, the page is ready
-                    await playwrightPage.WaitForSelectorAsync(
-                        "div.js-quick-links",
-                        new PageWaitForSelectorOptions()
-                        {
-                            Timeout = 10000
-                        }
-                    );
+                    // Wait for page to automatically reload with the new geo-location
+                    await playwrightPage.WaitForSelectorAsync("div.ds-mx-auto");
                     break;
                 }
                 catch (Exception)
@@ -805,17 +799,21 @@ namespace Scraper
         {
             try
             {
-                var storeLocElement = await playwrightPage!.QuerySelectorAsync("span.fs-selected-store__name");
-                return await storeLocElement!.InnerHTMLAsync();
+                // Get the first p element, which contains the store name
+                var storeLocationElement = await playwrightPage!.QuerySelectorAsync("p");
+                var storeLocationText = await storeLocationElement!.InnerTextAsync();
+
+                // Return the store name
+                return storeLocationText.Replace("Collect from ", "");
             }
             catch (PlaywrightException)
             {
                 LogError("Error loading playwright browser, check firewall and network settings");
                 throw;
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                return "Unknown";
+                return e.Message;
             }
         }
 
