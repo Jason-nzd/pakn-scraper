@@ -1,5 +1,5 @@
-# List of all URLs to be scraped (based off original PaknSave categories as of Oct-2025)
-# --------------------------------------------------------------------------------
+# List of all URLs to be scraped (based off original PaknSave categories as of March-2026)
+# ----------------------------------------------------------------------------------------
 # Not all products are scraped. Only popular categories are to save time.
 # Add pages=2 or similiar to scrape more pages per category.
 # Add category=name to replace the category if storing to a database.
@@ -96,6 +96,9 @@ https://www.paknsave.co.nz/shop/category/hot-and-cold-drinks/juice--smoothies?pg
 https://www.paknsave.co.nz/shop/category/hot-and-cold-drinks/syrups-cordials--powdered-drinks?pg=1 category=juice
 
 # Beer, Wine & Cider
+https://www.paknsave.co.nz/shop/category/beer-wine-and-cider/beer?pg=1
+https://www.paknsave.co.nz/shop/category/beer-wine-and-cider/craft-beer?pg=1
+https://www.paknsave.co.nz/shop/search?pg=1&q=wine category=wine
 
 # Health & Body
 
