@@ -21,7 +21,7 @@ namespace Scraper
         static readonly int secondsDelayBetweenPageScrapes = 11;
         static bool uploadToDatabase = false;
         static bool uploadImages = false;
-        static bool useHeadlessBrowser = false;
+        static bool useHeadlessBrowser = true;
 
         public record Product(
             string id,
