@@ -1,8 +1,11 @@
 # PaknSave Scraper
 
-Scrapes product pricing and info from the PaknSave NZ website. Product information and price snapshots can be stored on Azure CosmosDB, or this program can simply log to console. Images can be sent to an API for resizing, analysis and other processing.
+Scrapes product pricing and info from the PaknSave NZ website and logs the data to the console.
 
-The scraper is powered by `Microsoft Playwright`. It requires `.NET SDK` & `Powershell` to run. Azure CosmosDB and image processing are optional.
+Product information and price snapshots can be optionally stored into Azure CosmosDB.
+Images can be sent to an API for resizing, analysis and other processing.
+
+The scraper is powered by `Microsoft Playwright`, requiring `.NET 8.0` & `Powershell` to run.
 
 ## Quick Setup
 
@@ -13,13 +16,13 @@ dotnet restore
 dotnet build
 ```
 
-Playwright Chromium web browser must be downloaded and installed using:
+Playwright Chromium web browser can be installed using:
 
 ```cmd
 pwsh bin/Debug/net6.0/playwright.ps1 install chromium
 ```
 
-The program is now ready to use and will scrape all URLs placed in `Urls.txt`.
+The program is now ready to use and will scrape all default URLs in `Urls.txt`.
 
 ```cmd
 dotnet run
@@ -50,16 +53,28 @@ The closest store location to the co-ordinates will be selected when running the
 
 ## Command-Line Usage
 
-To dry run the scraper, logging each product to the console:
+To dry run the scraper and log each product to the console:
 
 ```powershell
 dotnet run
 ```
 
-To run the scraper with both logging and storing of each product to the database:
+Optional arguments can be mixed and match for advanced usage:
+
+To store scraped data to the cosmosdb database (defined in appsettings).
 
 ```powershell
 dotnet run db
+```
+
+Images can be sent off for processing to an azure func url (defined in appsettings).
+```powershell
+dotnet run db images
+```
+
+The browser defaults to headless mode but can changed to headed for debugging and reliability.
+```powershell
+dotnet run headed
 ```
 
 ## Sample Dry Run Output
