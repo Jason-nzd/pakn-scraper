@@ -37,7 +37,7 @@ https://www.paknsave.co.nz/shop/category/fridge-deli-and-eggs/deli-meats--smoked
 # Bakery
 https://www.paknsave.co.nz/shop/category/bakery/sliced--packaged-bread?pg=1 category=bread pages=2
 https://www.paknsave.co.nz/shop/category/bakery/burger-buns-rolls--garlic-bread?pg=1 category=bread-rolls
-https://www.paknsave.co.nz/shop/category/bakery?pg=1&refinementList%5Bcategory1NI%5D%5B0%5D=Chilled%20Pasta%2C%20Pizza%20%26%20Garlic%20Bread&refinementList%5Bcategory1NI%5D%5B1%5D=Gluten%20Free%2C%20Low%20Carb%20%26%20Keto&refinementList%5Bcategory1NI%5D%5B2%5D=Wraps%2C%20Pita%20%26%20Flat%20Bread category=speciality-bread
+https://www.paknsave.co.nz/shop/category/bakery?pg=1&refinementList%5Bcategory1NI%5D%5B0%5D=Chilled%20Pasta%2C%20Pizza%20%26%20Garlic%20Bread&refinementList%5Bcategory1NI%5D%5B1%5D=Gluten%20Free%2C%20Low%20Carb%20%26%20Keto&refinementList%5Bcategory1NI%5D%5B2%5D=Wraps%2C%20Pita%20%26%20Flat%20Bread category=specialty-bread
 https://www.paknsave.co.nz/shop/category/bakery/cakes-muffins--desserts?pg=1 category=bakery-cakes
 
 # Frozen
@@ -55,7 +55,7 @@ https://www.paknsave.co.nz/shop/category/frozen/frozen-pizza--ready-meals/frozen
 https://www.paknsave.co.nz/shop/category/frozen/frozen-pastry--bread?pg=1 category=pastries-cheesecake
 https://www.paknsave.co.nz/shop/category/frozen/ice-cream--sorbet?pg=1&refinementList%5Bcategory2NI%5D%5B0%5D=Ice%20Cream%20Tubs&refinementList%5Bcategory2NI%5D%5B1%5D=Premium%20Ice%20Cream%20Tubs&refinementList%5Bcategory2NI%5D%5B2%5D=Dairy%20Free%20Ice%20Cream%20%26%20Sorbet category=ice-cream pages=3
 https://www.paknsave.co.nz/shop/category/frozen/ice-cream--sorbet?pg=1&refinementList%5Bcategory2NI%5D%5B0%5D=Ice%20Blocks&refinementList%5Bcategory2NI%5D%5B1%5D=Multipacks%20%26%20Single%20Serve category=ice-blocks pages=2
-https://www.paknsave.co.nz/shop/category/frozen/frozen-fruit--desserts?pg=1 categories=frozen-fruit
+https://www.paknsave.co.nz/shop/category/frozen/frozen-fruit--desserts?pg=1 category=frozen-fruit
 
 # Pantry
 https://www.paknsave.co.nz/shop/category/pantry/chips-nuts--snacks?pg=1&refinementList%5Bcategory2NI%5D%5B0%5D=Chips&refinementList%5Bcategory2NI%5D%5B1%5D=Corn%20Chips%20%26%20Salsa category=chips pages=3
@@ -70,7 +70,7 @@ https://www.paknsave.co.nz/shop/category/pantry/jams-honey--spreads?pg=1 categor
 https://www.paknsave.co.nz/shop/category/pantry/breakfast-cereals?pg=1 category=cereal pages=3
 https://www.paknsave.co.nz/shop/category/pantry/long-life--dairy-free-milk/uht-milk--milk-powder?pg=1 category=long-life-milk
 https://www.paknsave.co.nz/shop/category/pantry/long-life--dairy-free-milk?pg=1&refinementList%5Bcategory2NI%5D%5B0%5D=Dairy%20Free%20Milk&refinementList%5Bcategory2NI%5D%5B1%5D=Oat%20%26%20Rice%20Milk&refinementList%5Bcategory2NI%5D%5B2%5D=Soy%20Milk&refinementList%5Bcategory2NI%5D%5B3%5D=Nut%20Milk category=milk
-https://www.paknsave.co.nz/shop/category/pantry/canned-foods--packets/baked-beans--spaghetti?pg=1 category=beans=spaghetti
+https://www.paknsave.co.nz/shop/category/pantry/canned-foods--packets/baked-beans--spaghetti?pg=1 category=beans-spaghetti
 https://www.paknsave.co.nz/shop/category/pantry/canned-foods--packets?pg=1&refinementList%5Bcategory2NI%5D%5B0%5D=Canned%20Salmon%20%26%20Other%20Seafood&refinementList%5Bcategory2NI%5D%5B1%5D=Canned%20Tuna category=canned-fish
 https://www.paknsave.co.nz/shop/category/pantry/canned-foods--packets/canned-meat?pg=1
 https://www.paknsave.co.nz/shop/category/pantry/canned-foods--packets/canned--packet-soup?pg=1 category=soup

@@ -57,6 +57,9 @@ namespace Scraper
                     // Get url from the first split section
                     string url = textLine.Split(' ').First();
 
+                    // Replace categories= with category= (old format previously used)
+                    url = url.Replace("categories=", "category=");
+
                     // Optimise query parameters
                     url = OptimiseURLQueryParameters(url, replaceQueryParamsWith);
 
@@ -361,10 +364,18 @@ namespace Scraper
 
         public static string DeriveCategoryFromURL(string url)
         {
-            int categoriesEndIndex = url.Contains("?") ? url.IndexOf("?") : url.Length;
-            string categoriesString = url.Substring(0, categoriesEndIndex);
-            string lastCategory = categoriesString.Split("/").Last();
-            return lastCategory;
+            // If a search url is used, use the search parameter as the category
+            if (url.Contains("search?"))
+            {
+                return url.Substring(url.IndexOf("q=") + 2);
+            }
+            else
+            {
+                int categoriesEndIndex = url.Contains("?") ? url.IndexOf("?") : url.Length;
+                string categoriesString = url.Substring(0, categoriesEndIndex);
+                string lastCategory = categoriesString.Split("/").Last();
+                return lastCategory;
+            }
         }
 
         // CheckProductOverrides()
