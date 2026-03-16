@@ -505,8 +505,8 @@ namespace Scraper
                 string roundedUnitPrice = Math.Round((decimal)(productPrice / quantity), 2).ToString();
                 //Log(productPrice + " / " + quantity + " = " + roundedUnitPrice + "/" + matchedUnit);
 
-                // Return in format '450g cheese' = '0.45/kg/450'
-                return roundedUnitPrice + "/" + matchedUnit + "/" + originalUnitQuantity;
+                // Return in format '450g cheese' = '0.45/kg'
+                return roundedUnitPrice + "/" + matchedUnit;
             }
             return null;
         }
