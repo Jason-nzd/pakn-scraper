@@ -229,7 +229,7 @@ namespace Scraper
                         category: dbProduct.category,
                         sourceSite: dbProduct.sourceSite,
                         priceHistory: updatedHistory.ToArray(),
-                        lastUpdated: today,
+                        lastChecked: today,
                         unitPrice: dbProduct.unitPrice
                     )
                 );
@@ -254,10 +254,10 @@ namespace Scraper
             // }
             else
             {
-                // Else existing DB Product has not changed, update only lastUpdated
+                // Else existing DB Product has not changed, update only lastChecked
                 return new ProductResponse(
                     UpsertResponse.AlreadyUpToDate,
-                    dbProduct with { lastUpdated = today }
+                    dbProduct with { lastChecked = today }
                 );
             }
         }
@@ -278,7 +278,7 @@ namespace Scraper
                     category: scrapedProduct.category,
                     sourceSite: scrapedProduct.sourceSite,
                     priceHistory: [new DatedPrice(date: today, price: scrapedProduct.currentPrice)],
-                    lastUpdated: today,
+                    lastChecked: today,
                     unitPrice: scrapedProduct.unitPrice
                 );
 

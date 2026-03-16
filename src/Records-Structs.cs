@@ -15,7 +15,7 @@ public record DBProduct(
     string category,
     string sourceSite,
     DatedPrice[] priceHistory,
-    string lastUpdated,
+    string lastChecked,
     string unitPrice
 );
 
