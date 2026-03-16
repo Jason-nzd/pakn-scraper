@@ -54,11 +54,9 @@ namespace Scraper
                 }
                 else if (textLine.Contains(urlShouldContain))
                 {
+                    // Sample textLine = website.co.nz/shop/category/bakery/sliced--packaged-bread?pg=1 category=bread pages=2
                     // Get url from the first split section
                     string url = textLine.Split(' ').First();
-
-                    // Replace categories= with category= (old format previously used)
-                    url = url.Replace("categories=", "category=");
 
                     // Optimise query parameters
                     url = OptimiseURLQueryParameters(url, replaceQueryParamsWith);
@@ -67,13 +65,13 @@ namespace Scraper
                     string category = DeriveCategoryFromURL(url);
 
                     // Get any parameters placed after the url
-                    string[] textLineParams = textLine.Split(' ');
-                    textLineParams = textLineParams.Skip(1).ToArray();
+                    string[] additionalParams = textLine.Split(' ');
+                    additionalParams = additionalParams.Skip(1).ToArray();
 
-                    // Default the numPages per url to 1
+                    // Default the numPages to scrape per url to 1
                     int numPages = 1;
 
-                    foreach (string param in textLineParams)
+                    foreach (string param in additionalParams)
                     {
                         // If overridden category is provided, override the scraped category
                         if (param.Contains("category="))
@@ -115,7 +113,7 @@ namespace Scraper
                         }
                         else
                         {
-                            // For page2 and up, add the specified query option plus the increment to the URL
+                            // For page2 and up, add the associated query option plus the increment to the URL
 
                             // Examples: pg=2, pg=4, pg=6, etc, or 
                             int pageIndex = incrementEachPageBy * page;
@@ -183,7 +181,7 @@ namespace Scraper
             // Get AZURE_FUNC_URL from appsettings.json
             // Example format:
             // https://<func-app-name>.azurewebsites.net/api/ImageToS3?code=<func-auth-code>&destination=s3://<bucket>/<optional-path>/
-            string? funcUrl = config!.GetSection("AZURE_FUNC_URL").Value;
+            string? funcUrl = config!.GetSection("IMAGE_PROCESS_API_URL").Value;
 
             // Check funcUrl is valid
             if (!funcUrl!.Contains("http"))

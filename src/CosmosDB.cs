@@ -1,3 +1,6 @@
+using System.Data.Common;
+using System.Diagnostics;
+using Azure.Core.Diagnostics;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Configuration;
 using static Scraper.Program;
@@ -11,6 +14,8 @@ namespace Scraper
         public static CosmosClient? cosmosClient;
         public static Database? database;
         public static Container? cosmosContainer;
+        static string partitionKey = "/category";
+        static string today = DateTime.Today.ToString("yyyy-MM-dd");
 
         // EstablishConnection()
         // ---------------------
@@ -105,47 +110,79 @@ namespace Scraper
 
         // UpsertProduct()
         // ---------------
-        // Takes a scraped Product, and tries to insert it or update it on CosmosDB.
-
-        public async static Task<UpsertResponse> UpsertProduct(Product scrapedProduct)
+        // Takes a scraped Product, transforms it to a DBProduct, and then tries to upsert to CosmosDB.
+        public async static Task<UpsertResponse> TransformAndUpsertProduct(Product scrapedProduct)
         {
+            System.Net.HttpStatusCode statusCode = System.Net.HttpStatusCode.NotFound;
+            DBProduct? dbProduct = null;
+
             try
             {
                 // Check if product already exists on CosmosDB, throws exception if not found
-                var response = await cosmosContainer!.ReadItemAsync<Product>(
+                var response = await cosmosContainer!.ReadItemAsync<DBProduct>(
                     scrapedProduct.id,
-                    new PartitionKey(scrapedProduct.name)
+                    new PartitionKey(scrapedProduct.category)   // try use category partition
                 );
+                statusCode = response.StatusCode;
+                dbProduct = response.Resource;
+            }
+            catch
+            {
+                // just continue onto the next check
+            }
+            try
+            {
+                // Partition key mismatch - try querying by id across all partitions
+                var query = new QueryDefinition(
+                    "SELECT * FROM c WHERE c.id = @id"
+                )
+                .WithParameter("@id", scrapedProduct.id);
 
-                if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                var feedIterator = cosmosContainer!.GetItemQueryIterator<DBProduct>(query);
+
+                if (feedIterator.HasMoreResults)
                 {
+                    var response = await feedIterator.ReadNextAsync();
+                    if (response.Count > 0)
+                    {
+                        dbProduct = response.First();
+                        statusCode = System.Net.HttpStatusCode.OK;
+                    }
+                }
+            }
+            catch
+            {
+                // just continue onto the next check
+            }
 
-                    // Get product from CosmosDB resource
-                    Product dbProduct = response.Resource;
-
+            if (statusCode == System.Net.HttpStatusCode.OK)
+            {
+                try
+                {
                     // Build an updated product with values from both the DB and scraped products
-                    ProductResponse productResponse = BuildUpdatedProduct(dbProduct, scrapedProduct);
+                    ProductResponse productResponse = BuildUpdatedProduct
+                    (
+                        dbProduct!,
+                        scrapedProduct
+                    );
 
                     // Upsert the updated product back to CosmosDB
                     await cosmosContainer!.UpsertItemAsync(
-                        productResponse.product,
-                        new PartitionKey(productResponse.product.name)
+                        productResponse.dbProduct,
+                        new PartitionKey(dbProduct!.category)
                     );
 
                     // Return the UpsertResponse based on what data has changed
                     return productResponse.upsertResponse;
                 }
+                catch
+                {
+
+                }
             }
-            // Catch not found exception and prepare to upload a new Product
-            catch (CosmosException e)
+            else if (statusCode == System.Net.HttpStatusCode.NotFound)
             {
-                if (e.StatusCode == System.Net.HttpStatusCode.NotFound)
-                    return await InsertNewProduct(scrapedProduct);
-            }
-            catch (Exception e)
-            {
-                LogError(e.GetType().ToString());
-                Log(e.ToString());
+                return await InsertNewProduct(scrapedProduct);
             }
 
             // Return failed if this part is ever reached
@@ -156,143 +193,96 @@ namespace Scraper
         // --------------------
         // Builds a product with combined data from scrapedProduct, and price history data from dbProduct.
 
-        public static ProductResponse BuildUpdatedProduct(Product dbProduct, Product scrapedProduct)
+        public static ProductResponse BuildUpdatedProduct(DBProduct dbProduct, Product scrapedProduct)
         {
             // Measure the price difference between the new scraped product and the old db product
-            float priceDifference = Math.Abs(dbProduct.currentPrice - scrapedProduct.currentPrice);
+            float priceDifference = Math.Abs(dbProduct.priceHistory.Last().price - scrapedProduct.currentPrice);
 
             // Check if price has changed by more than $0.05
             bool priceHasChanged = priceDifference > 0.05;
 
-            // Check if DB product has category set
-            string oldCategories;
-            try
-            {
-                oldCategories = string.Join(" ", dbProduct.category);
-            }
-            catch
-            {
-                oldCategories = string.Empty;
-            }
-
-            string newCategories = string.Join(" ", scrapedProduct.category);
-
-            // Check if size, categories, or other minor values have changed
-            bool otherDataHasChanged =
-                dbProduct!.size != scrapedProduct.size ||
-                oldCategories != newCategories ||
-                dbProduct.sourceSite != scrapedProduct.sourceSite ||
-                dbProduct.name != scrapedProduct.name ||
-                dbProduct.unitPrice != scrapedProduct.unitPrice ||
-                dbProduct.unitName != scrapedProduct.unitName ||
-                dbProduct.originalUnitQuantity != scrapedProduct.originalUnitQuantity
-            ;
-
             // If price has changed and not on the same day, we can do a full update from the scraped product
-            if (priceHasChanged &&
-                dbProduct.lastUpdated.ToShortDateString() !=
-                scrapedProduct.lastUpdated.ToShortDateString()
-            )
+            if (priceHasChanged && dbProduct.priceHistory.Last().date != today)
             {
-                // Price has changed, so we can create an updated Product with the changes
+                // Price has changed, so we can create an updated priceHistory with today's addition
                 List<DatedPrice> updatedHistory = dbProduct.priceHistory.ToList<DatedPrice>();
-                updatedHistory.Add(scrapedProduct.priceHistory[0]);
+                DatedPrice newDatedPriceEntry = new DatedPrice(date: today, price: scrapedProduct.currentPrice);
+                updatedHistory.Add(newDatedPriceEntry);
 
                 // Log price change with different verb and colour depending on price change direction
-                bool priceTrendingDown = scrapedProduct.currentPrice < dbProduct!.currentPrice;
+                bool priceTrendingDown = scrapedProduct.currentPrice < dbProduct.priceHistory.Last().price;
                 string priceTrendText = "  Price " + (priceTrendingDown ? "Down " : "Up   ") + ":";
 
                 Log(
                     $"{priceTrendText} {dbProduct.name.PadRight(51).Substring(0, 51)} | " +
-                    $"${dbProduct.currentPrice} > ${scrapedProduct.currentPrice}",
+                    $"${dbProduct.priceHistory.Last().price} > ${scrapedProduct.currentPrice}",
                     priceTrendingDown ? ConsoleColor.Green : ConsoleColor.Red
                 );
 
                 // Return new product with updated data
-                return new ProductResponse(UpsertResponse.PriceUpdated, new Product(
-                    dbProduct.id,
-                    scrapedProduct.name,
-                    scrapedProduct.size,
-                    scrapedProduct.currentPrice,
-                    scrapedProduct.category,
-                    scrapedProduct.sourceSite,
-                    updatedHistory.ToArray(),
-                    scrapedProduct.lastUpdated,
-                    scrapedProduct.lastChecked,
-                    scrapedProduct.unitPrice,
-                    scrapedProduct.unitName,
-                    scrapedProduct.originalUnitQuantity
-                ));
+                return new ProductResponse(
+                    UpsertResponse.PriceUpdated,
+                    new DBProduct(
+                        id: dbProduct.id,
+                        name: dbProduct.name,
+                        size: dbProduct.size,
+                        category: dbProduct.category,
+                        sourceSite: dbProduct.sourceSite,
+                        priceHistory: updatedHistory.ToArray(),
+                        lastUpdated: today,
+                        unitPrice: dbProduct.unitPrice
+                    )
+                );
             }
-            else if (otherDataHasChanged)
-            {
-                // If only non-price data has changed, update non price/date fields
-                return new ProductResponse(UpsertResponse.NonPriceUpdated, new Product(
-                    dbProduct.id,
-                    scrapedProduct.name,
-                    scrapedProduct.size,
-                    dbProduct.currentPrice,
-                    scrapedProduct.category,
-                    scrapedProduct.sourceSite,
-                    dbProduct.priceHistory,
-                    dbProduct.lastUpdated,
-                    scrapedProduct.lastChecked,
-                    scrapedProduct.unitPrice,
-                    scrapedProduct.unitName,
-                    scrapedProduct.originalUnitQuantity
-                ));
-            }
+            // else if (otherDataHasChanged)
+            // {
+            //     // If only non-price data has changed, update non price/date fields
+            //     return new ProductResponse(UpsertResponse.NonPriceUpdated, new Product(
+            //         dbProduct.id,
+            //         scrapedProduct.name,
+            //         scrapedProduct.size,
+            //         dbProduct.currentPrice,
+            //         scrapedProduct.category,
+            //         scrapedProduct.sourceSite,
+            //         dbProduct.priceHistory,
+            //         dbProduct.lastUpdated,
+            //         scrapedProduct.lastChecked,
+            //         scrapedProduct.unitPrice,
+            //         scrapedProduct.unitName,
+            //         scrapedProduct.originalUnitQuantity
+            //     ));
+            // }
             else
             {
-                // Else existing DB Product has not changed, update only lastChecked
-                return new ProductResponse(UpsertResponse.AlreadyUpToDate, new Product(
-                    dbProduct.id,
-                    dbProduct.name,
-                    dbProduct.size,
-                    dbProduct.currentPrice,
-                    dbProduct.category,
-                    dbProduct.sourceSite,
-                    dbProduct.priceHistory,
-                    dbProduct.lastUpdated,
-                    scrapedProduct.lastChecked,
-                    dbProduct.unitPrice,
-                    dbProduct.unitName,
-                    dbProduct.originalUnitQuantity
-                ));
-            }
-        }
-
-        public enum UpsertResponse
-        {
-            NewProduct,
-            PriceUpdated,
-            NonPriceUpdated,
-            AlreadyUpToDate,
-            Failed
-        }
-
-        public struct ProductResponse
-        {
-            public UpsertResponse upsertResponse;
-            public Product product;
-
-            public ProductResponse(UpsertResponse upsertResponse, Product product) : this()
-            {
-                this.upsertResponse = upsertResponse;
-                this.product = product;
+                // Else existing DB Product has not changed, update only lastUpdated
+                return new ProductResponse(
+                    UpsertResponse.AlreadyUpToDate,
+                    dbProduct with { lastUpdated = today }
+                );
             }
         }
 
         // InsertNewProduct()
         // ------------------
         // Inserts a new Product into CosmosDB
-
         private static async Task<UpsertResponse> InsertNewProduct(Product scrapedProduct)
         {
             try
             {
-                // No existing product was found, upload to CosmosDB
-                await cosmosContainer!.UpsertItemAsync(scrapedProduct, new PartitionKey(scrapedProduct.name));
+                // Build a new DBProduct with a single priceHistory [ entry ]
+                DBProduct p = new DBProduct
+                (
+                    id: scrapedProduct.id,
+                    name: scrapedProduct.name,
+                    size: scrapedProduct.size,
+                    category: scrapedProduct.category,
+                    sourceSite: scrapedProduct.sourceSite,
+                    priceHistory: [new DatedPrice(date: today, price: scrapedProduct.currentPrice)],
+                    lastUpdated: today,
+                    unitPrice: scrapedProduct.unitPrice
+                );
+
+                await cosmosContainer!.UpsertItemAsync(scrapedProduct, new PartitionKey(scrapedProduct.category));
 
                 Log(
                     $"  New Product: {scrapedProduct.id,-8} | " +
@@ -306,26 +296,6 @@ namespace Scraper
             {
                 Log($"  CosmosDB: Upsert Error for new Product: {e.StatusCode}");
                 return UpsertResponse.Failed;
-            }
-        }
-
-        // CustomQuery()
-        // -------------
-        // Is used for debugging using full SQL queries
-
-        public static async Task CustomQuery()
-        {
-            var feedIterator = cosmosContainer!.GetItemQueryIterator<Product>(
-                "select * from products p where contains(p.sourceSite, 'newworld')"
-            );
-
-            while (feedIterator.HasMoreResults)
-            {
-                foreach (var item in await feedIterator.ReadNextAsync())
-                {
-                    Log($"  Deleting {item.id} - {item.name}");
-                    await cosmosContainer.DeleteItemAsync<Product>(item.id, new PartitionKey(item.name));
-                }
             }
         }
     }
