@@ -15,28 +15,71 @@ namespace Scraper
         // EstablishConnection()
         // ---------------------
         // Establishes a connection using settings defined in appsettings.json.
-
-        public static async Task<bool> EstablishConnection(
-            string db,
-            string partitionKey,
-            string container
-        )
+        public static async Task<bool> EstablishConnection()
         {
+            // Read all config values upfront with proper null/empty validation
+            string? endpoint = config["COSMOS_ENDPOINT"];
+            string? key = config["COSMOS_KEY"];
+            string? dbName = config["COSMOS_DB"];
+            string? containerName = config["COSMOS_CONTAINER"];
+
+            // Validate required configuration
+            if (string.IsNullOrWhiteSpace(endpoint))
+            {
+                LogError("COSMOS_ENDPOINT in appsettings.json is missing or empty");
+                return false;
+            }
+            if (string.IsNullOrWhiteSpace(key))
+            {
+                LogError("COSMOS_KEY in appsettings.json is missing or empty");
+                return false;
+            }
+            if (string.IsNullOrWhiteSpace(dbName))
+            {
+                LogError("COSMOS_DB in appsettings.json is missing or empty");
+                return false;
+            }
+            if (string.IsNullOrWhiteSpace(containerName))
+            {
+                LogError("COSMOS_CONTAINER in appsettings.json is missing or empty");
+                return false;
+            }
+
             try
             {
-                // Read from appsettings.json or appsettings.local.json
-                cosmosClient = new CosmosClient(
-                    accountEndpoint: config!.GetRequiredSection("COSMOS_ENDPOINT").Get<string>(),
-                    authKeyOrResourceToken: config!.GetRequiredSection("COSMOS_KEY").Get<string>()!
-                );
+                // Create CosmosDB client
+                cosmosClient = new CosmosClient(endpoint, key);
+            }
+            catch (Exception e)
+            {
+                LogError(e.GetType().ToString());
+                LogError("Error Connecting to CosmosDB - check appsettings.json ");
+                Environment.Exit(1);
+                return false;
+            }
 
-                database = cosmosClient.GetDatabase(id: db);
+            try
+            {
+                // Get database reference
+                database = cosmosClient.GetDatabase(dbName);
+            }
+            catch (Exception e)
+            {
+                LogError(e.Message);
+                return false;
+            }
 
-                cosmosContainer = await database.CreateContainerIfNotExistsAsync(
-                    id: container,
+            try
+            {
+                // Create container if not exists
+                cosmosContainer = await database!.CreateContainerIfNotExistsAsync(
+                    id: containerName,
                     partitionKeyPath: partitionKey,
                     throughput: 400
                 );
+
+                // Perform a read test
+                cosmosContainer.GetHashCode();
 
                 Log($"\n(Connected to CosmosDB) {cosmosClient.Endpoint}", ConsoleColor.Yellow);
                 return true;
@@ -55,21 +98,6 @@ namespace Scraper
                 LogError(e.GetType().ToString());
                 LogError(
                     "Error Connecting to CosmosDB - check firewall and internet status"
-                );
-                return false;
-            }
-            catch (Exception e)
-            {
-                LogError(e.GetType().ToString());
-                LogError(
-                    "Error Connecting to CosmosDB - make sure appsettings.json " +
-                    "is created and contains:"
-                );
-                Log(
-                    "{\n" +
-                    "\t\"COSMOS_ENDPOINT\": \"<your cosmosdb endpoint uri>\",\n" +
-                    "\t\"COSMOS_KEY\": \"<your cosmosdb primary key>\"\n" +
-                    "}\n"
                 );
                 return false;
             }
