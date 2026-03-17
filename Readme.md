@@ -110,7 +110,6 @@ This sample was re-run on multiple days to capture changing prices.
     "name": "Supreme Lite Milk",
     "size": "1L",
     "category": "milk",
-    "sourceSite": "paknsave.co.nz",
     "priceHistory": [
         {
             "date": "2023-07-02",

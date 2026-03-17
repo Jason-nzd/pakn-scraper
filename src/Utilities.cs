@@ -41,7 +41,7 @@ namespace Scraper
             string urlShouldContain,
             string replaceQueryParamsWith,
             string queryOptionForEachPage,
-            int incrementEachPageBy = 1
+            int incrementEachPageBy = 1 // could be pg=1, pg=2, or items=32, items=64, etc.
         )
         {
             List<CategorisedURL> categorisedUrls = new List<CategorisedURL>();
@@ -54,7 +54,7 @@ namespace Scraper
                 }
                 else if (textLine.Contains(urlShouldContain))
                 {
-                    // Sample textLine = website.co.nz/shop/category/bakery/sliced--packaged-bread?pg=1 category=bread pages=2
+                    // Sample textLine = website.co.nz/category/bakery/sliced-bread category=bread pages=2
                     // Get url from the first split section
                     string url = textLine.Split(' ').First();
 
@@ -146,7 +146,9 @@ namespace Scraper
 
         public static string OptimiseURLQueryParameters(string url, string replaceQueryParamsWith)
         {
-            string cleanURL = url;
+            // Ensure https:// is at the start
+            url = url.Replace("http://", "https://");
+            if (!url.Contains("https://")) url = "https://" + url;
 
             // If url contains 'search?' or similar search queries, keep all query parameters
             if (Regex.Match(url.ToLower(), @"(search\?|f\=tags|q\=|refinementlist)").Success)
@@ -157,19 +159,19 @@ namespace Scraper
             // Else strip all query parameters
             else if (url.Contains('?'))
             {
-                cleanURL = url.Substring(0, url.IndexOf('?')) + "?";
+                url = url.Substring(0, url.IndexOf('?')) + "?";
             }
 
             // If there were no existing query parameters, ensure a ? is added
-            else cleanURL += "?";
+            else url += "?";
 
             // Replace query parameters with optimised ones,
             //  such as limiting to certain sellers,
             //  or showing a higher number of products
-            cleanURL += replaceQueryParamsWith;
+            url += replaceQueryParamsWith;
 
             // Return cleaned url
-            return cleanURL;
+            return url;
         }
 
         // UploadImageUsingRestAPI()
