@@ -270,7 +270,7 @@ namespace Scraper
             try
             {
                 // Build a new DBProduct with a single priceHistory [ entry ]
-                DBProduct p = new DBProduct
+                DBProduct newProduct = new DBProduct
                 (
                     id: scrapedProduct.id,
                     name: scrapedProduct.name,
@@ -282,12 +282,12 @@ namespace Scraper
                     unitPrice: scrapedProduct.unitPrice
                 );
 
-                await cosmosContainer!.UpsertItemAsync(scrapedProduct, new PartitionKey(scrapedProduct.category));
+                await cosmosContainer!.UpsertItemAsync(newProduct, new PartitionKey(newProduct.category));
 
                 Log(
-                    $"  New Product: {scrapedProduct.id,-8} | " +
-                    $"{scrapedProduct.name!.PadRight(40).Substring(0, 40)}" +
-                    $" | $ {scrapedProduct.currentPrice,5} | {scrapedProduct.size}"
+                    $"  New Product: {newProduct.id,-8} | " +
+                    $"{newProduct.name!.PadRight(40).Substring(0, 40)}" +
+                    $" | $ {scrapedProduct.currentPrice,5} | {newProduct.size}"
                 );
 
                 return UpsertResponse.NewProduct;
