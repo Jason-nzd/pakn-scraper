@@ -167,7 +167,7 @@ namespace Scraper
                     );
 
                     // Upsert the updated product back to CosmosDB
-                    await cosmosContainer!.UpsertItemAsync(
+                    var res = await cosmosContainer!.UpsertItemAsync(
                         productResponse.dbProduct,
                         new PartitionKey(dbProduct!.category)
                     );
@@ -175,9 +175,15 @@ namespace Scraper
                     // Return the UpsertResponse based on what data has changed
                     return productResponse.upsertResponse;
                 }
-                catch
+                catch (CosmosException ex)
                 {
+                    Console.WriteLine(ex.Diagnostics.ToString());
+                    throw;
+                }
 
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message);
                 }
             }
             else if (statusCode == System.Net.HttpStatusCode.NotFound)
